@@ -1,17 +1,12 @@
 """
 Registration model for event attendees
+Phase 1: Core fields only - no file uploads yet
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean
 from datetime import datetime
-import enum
+import secrets
 
 from database import Base
-
-
-class RegistrationStatus(str, enum.Enum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
 
 
 class Registration(Base):
@@ -20,19 +15,26 @@ class Registration(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Personal Information
-    full_name = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    phone = Column(String, nullable=False)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    phone = Column(String(20), nullable=False)
     
-    # Payment Information
-    transaction_id = Column(String, nullable=True)
-    payment_screenshot = Column(String, nullable=True)  # File path
+    # Team Information (Optional)
+    team_name = Column(String(255), nullable=True)
+    members = Column(Text, nullable=True)  # Comma-separated member names
     
-    # Status and Timestamps
-    status = Column(Enum(RegistrationStatus), default=RegistrationStatus.PENDING)
-    qr_code = Column(String, nullable=True)  # Path to QR code image
-    ticket_sent = Column(Boolean, default=False)
+    # Ticket Information
+    serial_code = Column(String(50), unique=True, index=True, nullable=False)
+    ticket_used = Column(Boolean, default=False, nullable=False)
     
+    # Status
+    status = Column(String(20), default="pending")  # pending, approved, rejected
+    
+    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    approved_at = Column(DateTime, nullable=True)
+    
+    @staticmethod
+    def generate_serial_code():
+        """Generate a unique 12-character serial code"""
+        return secrets.token_hex(6).upper()

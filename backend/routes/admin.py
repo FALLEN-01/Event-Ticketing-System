@@ -1,65 +1,98 @@
 """
-Admin routes - handles approval, rejection, and management
+Admin routes - Phase 1: Read-only dashboard
+Handles viewing all registrations (approval/rejection in Phase 2)
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
+from typing import List, Optional
+from pydantic import BaseModel
 
 from database import get_db
-from models.registration import Registration, RegistrationStatus
+from models.registration import Registration
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
-@router.get("/registrations")
+class RegistrationSummary(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: str
+    team_name: Optional[str]
+    members: Optional[str]
+    status: str
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class RegistrationsResponse(BaseModel):
+    total: int
+    pending: int
+    approved: int
+    rejected: int
+    registrations: List[RegistrationSummary]
+
+
+@router.get("/registrations", response_model=RegistrationsResponse)
 async def get_all_registrations(
-    status_filter: str = None,
+    status_filter: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Get all registrations (with optional status filter)
+    Get all registrations with optional status filter
+    Phase 1: Read-only view
     """
     query = db.query(Registration)
     
+    # Apply filter if provided
     if status_filter:
-        try:
-            status_enum = RegistrationStatus(status_filter)
-            query = query.filter(Registration.status == status_enum)
-        except ValueError:
+        if status_filter not in ["pending", "approved", "rejected"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status: {status_filter}"
+                detail="Invalid status filter. Use: pending, approved, or rejected"
             )
+        query = query.filter(Registration.status == status_filter)
     
     registrations = query.order_by(Registration.created_at.desc()).all()
     
-    return {
-        "total": len(registrations),
-        "registrations": [
-            {
-                "id": reg.id,
-                "full_name": reg.full_name,
-                "email": reg.email,
-                "phone": reg.phone,
-                "transaction_id": reg.transaction_id,
-                "status": reg.status.value,
-                "created_at": reg.created_at.isoformat(),
-                "qr_code": reg.qr_code,
-                "ticket_sent": reg.ticket_sent
-            }
+    # Calculate counts
+    all_regs = db.query(Registration).all()
+    counts = {
+        "pending": sum(1 for r in all_regs if r.status == "pending"),
+        "approved": sum(1 for r in all_regs if r.status == "approved"),
+        "rejected": sum(1 for r in all_regs if r.status == "rejected"),
+    }
+    
+    return RegistrationsResponse(
+        total=len(all_regs),
+        pending=counts["pending"],
+        approved=counts["approved"],
+        rejected=counts["rejected"],
+        registrations=[
+            RegistrationSummary(
+                id=reg.id,
+                name=reg.name,
+                email=reg.email,
+                phone=reg.phone,
+                team_name=reg.team_name,
+                members=reg.members,
+                status=reg.status,
+                created_at=reg.created_at.isoformat()
+            )
             for reg in registrations
         ]
-    }
+    )
 
 
-@router.patch("/registrations/{registration_id}/approve")
-async def approve_registration(
+@router.get("/registrations/{registration_id}")
+async def get_registration_detail(
     registration_id: int,
     db: Session = Depends(get_db)
 ):
     """
-    Approve a registration and trigger ticket generation
+    Get detailed information for a specific registration
     """
     registration = db.query(Registration).filter(Registration.id == registration_id).first()
     
@@ -69,44 +102,30 @@ async def approve_registration(
             detail="Registration not found"
         )
     
-    registration.status = RegistrationStatus.APPROVED
-    registration.approved_at = datetime.utcnow()
-    
-    # TODO: Generate QR code and send email ticket
-    
-    db.commit()
-    db.refresh(registration)
-    
     return {
-        "message": "Registration approved successfully",
-        "registration_id": registration.id,
-        "status": registration.status.value
+        "id": registration.id,
+        "name": registration.name,
+        "email": registration.email,
+        "phone": registration.phone,
+        "team_name": registration.team_name,
+        "members": registration.members,
+        "status": registration.status,
+        "created_at": registration.created_at.isoformat(),
+        "updated_at": registration.updated_at.isoformat()
     }
 
 
-@router.patch("/registrations/{registration_id}/reject")
-async def reject_registration(
-    registration_id: int,
-    db: Session = Depends(get_db)
-):
+@router.get("/stats")
+async def get_statistics(db: Session = Depends(get_db)):
     """
-    Reject a registration
+    Get dashboard statistics
     """
-    registration = db.query(Registration).filter(Registration.id == registration_id).first()
-    
-    if not registration:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Registration not found"
-        )
-    
-    registration.status = RegistrationStatus.REJECTED
-    
-    db.commit()
-    db.refresh(registration)
+    all_regs = db.query(Registration).all()
     
     return {
-        "message": "Registration rejected",
-        "registration_id": registration.id,
-        "status": registration.status.value
+        "total_registrations": len(all_regs),
+        "pending": sum(1 for r in all_regs if r.status == "pending"),
+        "approved": sum(1 for r in all_regs if r.status == "approved"),
+        "rejected": sum(1 for r in all_regs if r.status == "rejected"),
+        "with_teams": sum(1 for r in all_regs if r.team_name),
     }

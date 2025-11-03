@@ -1,49 +1,71 @@
 """
 FastAPI Backend for Event Ticket System
+Phase 1: Core registration and admin viewing
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+
+from config import settings
+from database import init_db
+from routes import registration, admin, ticket
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize database on startup"""
+    print("🚀 Initializing database...")
+    init_db()
+    print("✅ Database initialized successfully!")
+    yield
+    print("👋 Shutting down...")
+
 
 app = FastAPI(
-    title="Event Ticket System API",
-    description="Backend API for event registration and ticket management",
-    version="1.0.0"
+    title=settings.app_name,
+    description="Backend API for event registration and ticket management - Phase 1",
+    version=settings.app_version,
+    lifespan=lifespan
 )
 
-# CORS configuration for frontend apps
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5000",  # registration-form
-        "http://localhost:5001",  # admin-dashboard
-        "http://127.0.0.1:5000",
-        "http://127.0.0.1:5001",
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files for uploads
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Include routers
+app.include_router(registration.router)
+app.include_router(admin.router)
+app.include_router(ticket.router)
 
-# Import routes
-# from routes import registration, admin
 
 @app.get("/")
 async def root():
     return {
-        "message": "Event Ticket System API",
+        "message": f"{settings.app_name} API - Phase 1",
         "status": "active",
-        "version": "1.0.0"
+        "version": settings.app_version,
+        "phase": "1 - Core Registration & Admin View"
     }
+
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "phase": "1"
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
