@@ -1,0 +1,25 @@
+# FastAPI and dependencies
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+
+# Database
+sqlalchemy>=2.0.36
+
+# Email
+python-dotenv>=1.0.1
+aiosmtplib>=3.0.2
+
+# QR Code generation
+qrcode[pil]>=8.0
+
+# Image processing
+Pillow>=11.0.0
+
+# Validation
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+
+# Authentication (updated - python-jose is outdated)
+pyjwt[crypto]>=2.10.0
+passlib[bcrypt]>=1.7.4

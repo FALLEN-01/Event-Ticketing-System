@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build: ./backend
+    container_name: event-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/static:/app/static
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/event_tickets
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # PostgreSQL Database (for production)
+  db:
+    image: postgres:15-alpine
+    container_name: event-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=event_tickets
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # Registration Form Frontend
+  registration-form:
+    build: ./frontend/registration-form
+    container_name: event-registration
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./frontend/registration-form:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Admin Dashboard Frontend
+  admin-dashboard:
+    build: ./frontend/admin-dashboard
+    container_name: event-admin
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./frontend/admin-dashboard:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: event-ticket-network
