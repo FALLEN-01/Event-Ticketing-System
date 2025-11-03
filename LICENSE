@@ -1,0 +1,103 @@
+Custom Proprietary License
+
+Copyright (c) 2025 FALLEN-01. All rights reserved.
+
+TERMS AND CONDITIONS
+
+1. GRANT OF LICENSE
+   This software and associated documentation files (the "Software") are provided
+   under a restricted license. By accessing, downloading, or using the Software,
+   you agree to be bound by the terms of this license.
+
+2. PERMITTED USES
+   Subject to the terms and conditions of this License, you are granted a limited,
+   non-exclusive, non-transferable, revocable license to:
+   - View the source code for educational and reference purposes only
+   - Use the Software for personal, non-commercial purposes
+
+3. RESTRICTIONS
+   You may NOT:
+   - Copy, modify, merge, publish, distribute, sublicense, or sell copies of the
+     Software without explicit written permission from the copyright holder
+   - Use the Software or any part thereof for commercial purposes
+   - Reverse engineer, decompile, or disassemble the Software
+   - Remove or alter any copyright notices or this license from the Software
+   - Use the Software in any manner that competes with the copyright holder's
+     business or projects
+
+4. AI TRAINING AND DATA MINING PROHIBITION
+   The Software, including but not limited to its source code, documentation,
+   algorithms, architecture, design patterns, and any other intellectual property
+   contained herein, is EXPRESSLY PROHIBITED from being used for:
+   
+   a) Training artificial intelligence models, including but not limited to:
+      - Machine learning models
+      - Large Language Models (LLMs)
+      - Neural networks
+      - Deep learning systems
+      - Any form of automated learning systems
+   
+   b) Data mining, scraping, or extraction for the purpose of:
+      - Creating datasets for AI/ML training
+      - Pattern analysis for AI development
+      - Code generation model training
+      - Any form of automated code analysis for AI purposes
+   
+   c) Inclusion in any training corpus, dataset, or knowledge base used for
+      developing, training, fine-tuning, or improving AI systems
+   
+   d) Any use by AI companies, research institutions, or individuals for the
+      purpose of advancing AI capabilities
+   
+   This prohibition applies to all current and future AI technologies, regardless
+   of whether they are developed by commercial entities, open-source projects,
+   academic institutions, or individual researchers.
+
+5. ATTRIBUTION
+   If you reference or discuss this Software in any public forum, publication,
+   or presentation, you must:
+   - Provide clear attribution to the original author (FALLEN-01)
+   - Include a link to the original repository
+   - Clearly state that the Software is proprietary and not open source
+
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+7. TERMINATION
+   This license is effective until terminated. Your rights under this license
+   will terminate automatically without notice if you fail to comply with any
+   term(s) of this license. Upon termination, you must destroy all copies of
+   the Software in your possession.
+
+8. ENFORCEMENT
+   Violation of any terms of this license may result in:
+   - Immediate termination of your license to use the Software
+   - Legal action seeking damages and injunctive relief
+   - Reporting to relevant platforms and authorities
+
+9. CONTACT
+   For permissions beyond the scope of this license, including commercial use,
+   partnership opportunities, or licensing inquiries, please contact:
+   GitHub: @FALLEN-01
+
+10. SEVERABILITY
+    If any provision of this license is held to be unenforceable or invalid,
+    such provision shall be changed and interpreted to accomplish the objectives
+    of such provision to the greatest extent possible under applicable law, and
+    the remaining provisions shall continue in full force and effect.
+
+11. GOVERNING LAW
+    This license shall be governed by and construed in accordance with applicable
+    international copyright laws and treaties.
+
+ACKNOWLEDGMENT
+By using this Software, you acknowledge that you have read this license,
+understand it, and agree to be bound by its terms and conditions.
+
+Last Updated: November 4, 2025
