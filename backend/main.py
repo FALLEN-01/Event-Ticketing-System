@@ -5,8 +5,8 @@ Phase 1: Core registration and admin viewing
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 
-from config import settings
 from database import init_db
 from routes import registration, admin, ticket
 
@@ -22,16 +22,20 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.app_name,
+    title="Event Ticket System",
     description="Backend API for event registration and ticket management - Phase 1",
-    version=settings.app_version,
+    version="1.0.0",
     lifespan=lifespan
 )
 
 # CORS configuration
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", '["*"]')
+import json
+cors_origins = json.loads(CORS_ORIGINS) if isinstance(CORS_ORIGINS, str) else CORS_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,9 +50,9 @@ app.include_router(ticket.router)
 @app.get("/")
 async def root():
     return {
-        "message": f"{settings.app_name} API - Phase 1",
+        "message": "Event Ticket System API - Phase 1",
         "status": "active",
-        "version": settings.app_version,
+        "version": "1.0.0",
         "phase": "1 - Core Registration & Admin View"
     }
 
@@ -87,12 +91,12 @@ if __name__ == "__main__":
     logger.info("=" * 60)
     logger.info("🚀 Starting Event Ticketing System Backend")
     logger.info("=" * 60)
-    logger.info(f"📦 App Name: {settings.app_name}")
-    logger.info(f"📌 Version: {settings.app_version}")
+    logger.info(f"📦 App Name: Event Ticket System")
+    logger.info(f"📌 Version: 1.0.0")
     logger.info(f"🌐 Host: 0.0.0.0")
     logger.info(f"🔌 Port: 8000")
     logger.info(f"🔄 Hot Reload: Enabled")
-    logger.info(f"🔒 CORS Origins: {settings.cors_origins}")
+    logger.info(f"🔒 CORS Origins: {cors_origins}")
     logger.info("=" * 60)
     logger.info("✨ Server starting... Press CTRL+C to stop")
     logger.info("=" * 60)

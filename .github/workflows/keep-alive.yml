@@ -12,7 +12,7 @@ jobs:
       - name: Ping the Render app
         run: |
           echo "Pinging Render app to prevent sleep..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-app-name.onrender.com/ping)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://event-ticketing-system-k6fr.onrender.com/ping)
           echo "Response status: $response"
           if [ $response -eq 200 ]; then
             echo "✅ Ping successful!"
