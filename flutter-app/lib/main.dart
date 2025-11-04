@@ -147,60 +147,83 @@ class _ScannerScreenState extends State<ScannerScreen> {
         title: const Text('Scan Ticket'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: controller,
-            onDetect: (capture) {
-              final List<Barcode> barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                if (barcode.rawValue != null && !isProcessing) {
-                  verifyTicket(barcode.rawValue!);
-                  break;
-                }
-              }
-            },
-          ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Column(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _showManualEntryDialog,
-                    icon: const Icon(Icons.keyboard),
-                    label: const Text('Enter Serial Manually'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => controller.toggleTorch(),
-                    icon: const Icon(Icons.flash_on),
-                    label: const Text('Toggle Flash'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
+      body: Container(
+        color: Colors.black,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text(
+                'Position QR code inside the square',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-          if (isProcessing)
-            Container(
-              color: Colors.black54,
-              child: const Center(child: CircularProgressIndicator()),
+            Center(
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: MobileScanner(
+                    controller: controller,
+                    onDetect: (capture) {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      for (final barcode in barcodes) {
+                        if (barcode.rawValue != null && !isProcessing) {
+                          verifyTicket(barcode.rawValue!);
+                          break;
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ),
             ),
-        ],
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: _showManualEntryDialog,
+              icon: const Icon(Icons.keyboard),
+              label: const Text('Enter Serial Manually'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: () => controller.toggleTorch(),
+              icon: const Icon(Icons.flash_on),
+              label: const Text('Toggle Flash'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            if (isProcessing)
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+          ],
+        ),
       ),
     );
   }

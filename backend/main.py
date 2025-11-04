@@ -63,9 +63,32 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    import logging
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=" * 60)
+    logger.info("🚀 Starting Event Ticketing System Backend")
+    logger.info("=" * 60)
+    logger.info(f"📦 App Name: {settings.app_name}")
+    logger.info(f"📌 Version: {settings.app_version}")
+    logger.info(f"🌐 Host: 0.0.0.0")
+    logger.info(f"🔌 Port: 8000")
+    logger.info(f"🔄 Hot Reload: Enabled")
+    logger.info(f"🔒 CORS Origins: {settings.cors_origins}")
+    logger.info("=" * 60)
+    logger.info("✨ Server starting... Press CTRL+C to stop")
+    logger.info("=" * 60)
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True
+        reload=True,
+        log_level="info"
     )

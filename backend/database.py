@@ -1,38 +1,15 @@
-"""
-Database configuration and connection
-Phase 1: MySQL/MariaDB setup with Cloud SQL compatibility
-"""
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from config import settings
+from supabase import create_client, Client
 
-# Database URL from settings
-DATABASE_URL = settings.database_url
+# Supabase configuration
+SUPABASE_URL = "https://ckkyegjnbcrmipozjahe.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNra3llZ2puYmNybWlwb3pqYWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNDMzNTAsImV4cCI6MjA3NzgxOTM1MH0.7yNGRvhzA82h7STPSEy4TwgSxqQlkbrkBlWYOBYbgR8"
 
-# SQLite needs check_same_thread=False, MySQL doesn't
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
+# Create Supabase client
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def get_db():
+def get_supabase():
     """
-    Dependency for database sessions
+    Get Supabase client
     """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db():
-    """
-    Initialize database tables
-    """
-    Base.metadata.create_all(bind=engine)
+    return supabase
