@@ -48,11 +48,11 @@ backend/static/qr_codes/*
 !backend/static/qr_codes/.gitkeep
 
 # Flutter
-flutter-app/.dart_tool/
-flutter-app/.flutter-plugins
-flutter-app/.flutter-plugins-dependencies
-flutter-app/.packages
-flutter-app/build/
+ticket_scanner/.dart_tool/
+ticket_scanner/.flutter-plugins
+ticket_scanner/.flutter-plugins-dependencies
+ticket_scanner/.packages
+ticket_scanner/build/
 
 # Test coverage
 coverage/

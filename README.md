@@ -14,6 +14,8 @@ A complete event registration and ticket management system with web and mobile i
 - [API Documentation](#-api-documentation)
 - [Development Phases](#-development-phases)
 - [Environment Variables](#-environment-variables)
+- [Component Documentation](#-component-documentation)
+- [Deployment](#-deployment)
 - [Contributing](#-contributing)
 
 ---
@@ -54,13 +56,13 @@ event-ticket-system/
 │   ├── registration-form/                # Public registration form (Vite + React)
 │   └── admin-dashboard/                  # Admin panel (Vite + React)
 │
-└── flutter-app/                          # Mobile ticket scanner (Flutter)
+└── ticket_scanner/                       # Mobile ticket scanner (Flutter)
     └── lib/
 ```
 
 ---
 
-## � **Installation**
+## 🛠️ **Installation**
 
 ### Prerequisites
 
@@ -129,7 +131,7 @@ npm install
 ### Step 4: Flutter App Setup (Optional)
 
 ```bash
-cd flutter-app
+cd ticket_scanner
 
 # Create Flutter project
 flutter create .
@@ -156,7 +158,7 @@ py main.py
 .\start-backend.ps1
 ```
 
-✅ Backend runs at: **http://localhost:8000**  
+✅ Backend runs at: **http://localhost:8000**
 📚 API Docs: **http://localhost:8000/docs**
 
 ### Terminal 2 - Registration Form
@@ -190,7 +192,7 @@ npm run dev
 ### Mobile App (Optional)
 
 ```bash
-cd flutter-app
+cd ticket_scanner
 flutter run
 ```
 
@@ -203,7 +205,26 @@ Once the backend is running, visit:
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-## 📋 Development Phases
+### API Endpoints
+
+#### **Public Endpoints**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/registration/submit` | Submit new registration |
+| `GET` | `/api/registration/check/{email}` | Check registration status |
+
+#### **Admin Endpoints** (Authentication Required - Phase 3)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/registrations` | List all registrations with optional status filter |
+| `PATCH` | `/api/admin/registrations/{id}/approve` | Approve a registration |
+| `PATCH` | `/api/admin/registrations/{id}/reject` | Reject a registration |
+
+---
+
+## 📋 **Development Phases**
 
 ### ✅ Phase 1: Basic Form Submission (Current)
 - [x] Backend structure created
@@ -234,7 +255,9 @@ Once the backend is running, visit:
 - [ ] Payment gateway (Razorpay/Stripe)
 - [ ] Automatic payment verification
 
-## 🛠️ Tech Stack
+---
+
+## 🛠️ **Tech Stack**
 
 | Component           | Technology                   | Version |
 | ------------------- | ---------------------------- | ------- |
@@ -252,23 +275,6 @@ Once the backend is running, visit:
 | Authentication      | PyJWT                        | 2.10+   |
 | Password Hashing    | Passlib + Bcrypt             | Latest  |
 | Deployment          | Docker + Docker Compose      | -       |
-
-### API Endpoints
-
-#### **Public Endpoints**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/registration/submit` | Submit new registration |
-| `GET` | `/api/registration/check/{email}` | Check registration status |
-
-#### **Admin Endpoints** (Authentication Required - Phase 3)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/registrations` | List all registrations with optional status filter |
-| `PATCH` | `/api/admin/registrations/{id}/approve` | Approve a registration |
-| `PATCH` | `/api/admin/registrations/{id}/reject` | Reject a registration |
 
 ---
 
@@ -301,11 +307,52 @@ FRONTEND_ADMIN_URL=http://localhost:5174
 
 ---
 
+## 📚 **Component Documentation**
+
+For detailed documentation on each component, see:
+
+- **Backend API**: [backend/README.md](backend/README.md)
+  - FastAPI setup, Supabase PostgreSQL configuration
+  - API endpoints, database schema
+  - Deployment guide, troubleshooting
+
+- **Flutter Scanner App**: [ticket_scanner/README.md](ticket_scanner/README.md)
+  - Mobile scanner setup and configuration
+  - QR code scanning implementation
+  - Building and deploying the mobile app
+
+- **Registration Form**: [frontend/registration-form/README.md](frontend/registration-form/README.md)
+  - React + Vite setup
+  - Form fields and validation
+  - API integration
+
+- **Admin Dashboard**: [frontend/admin-dashboard/README.md](frontend/admin-dashboard/README.md)
+  - Tailwind CSS v4 configuration
+  - Dashboard features
+  - Admin panel setup
+
 ---
 
-## � **Docker Deployment** (Optional)
+## 🚀 **Deployment**
 
-For production deployment with Docker:
+### Production Deployment
+
+**Backend**: Deployed on Render
+- URL: https://event-ticketing-system-devx.onrender.com
+- Database: Supabase PostgreSQL (Session Pooler for IPv4 compatibility)
+- Keep-Alive: GitHub Actions workflow pings `/ping` every 8 minutes
+
+**Frontend**: To be deployed on Vercel/Netlify
+- Registration Form: TBD
+- Admin Dashboard: TBD
+
+**Mobile App**: Built and deployed to Android device (RMX3081)
+
+---
+
+## 🐳 **Docker Deployment** (Optional)
+
+For local production testing with Docker:
 
 ```bash
 # Build and start all services
@@ -360,7 +407,7 @@ Key Files:
 ├── backend/utils/email.py             # Email sending utility
 ├── frontend/registration-form/        # Public form (React + Vite)
 ├── frontend/admin-dashboard/          # Admin panel (React + Vite)
-├── flutter-app/                       # Mobile scanner app
+├── ticket_scanner/                    # Mobile scanner app
 └── docker-compose.yml                 # Container orchestration
 ```
 
@@ -378,7 +425,7 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## � **License**
+## 📄 **License**
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
@@ -401,7 +448,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## � **Support**
+## 📞 **Support**
 
 If you have any questions or run into issues:
 
@@ -414,7 +461,7 @@ If you have any questions or run into issues:
 
 ## 🚦 **Current Status**
 
-✅ **Phase 1**: Basic form submission (Backend + Database setup complete)  
+✅ **Phase 1**: Basic form submission (Backend + Database setup complete)
 🔄 **Next**: Build registration form UI with React + Tailwind
 
 ---

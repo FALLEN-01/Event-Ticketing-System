@@ -1,16 +1,111 @@
-# React + Vite
+# Admin Dashboard - Event Ticketing System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-based admin dashboard for viewing and managing event registrations.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **View Registrations**: List all registered users
+- **Real-time Data**: Fetch latest registrations from API
+- **Ticket Status**: See if tickets are used/unused
+- **Responsive Table**: Mobile-friendly data display
+- **Search & Filter**: Find specific registrations
 
-## React Compiler
+## 📋 Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: React 18 + Vite
+- **Styling**: Tailwind CSS v4
+- **HTTP**: Fetch API
 
-## Expanding the ESLint configuration
+## 🛠️ Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+- Node.js 16+
+- npm or yarn
+
+### Setup
+
+1. **Install dependencies**:
+```bash
+cd frontend/admin-dashboard
+npm install
+```
+
+2. **Configure API endpoint**:
+Edit `src/App.jsx`:
+```javascript
+// For local development
+const API_URL = 'http://localhost:8000';
+
+// For production
+const API_URL = 'https://event-ticketing-system-devx.onrender.com';
+```
+
+3. **Run development server**:
+```bash
+npm run dev
+```
+
+Access at: `http://localhost:5174`
+
+## 📊 Dashboard Features
+
+### Registration Table
+- **ID**: Registration ID
+- **Name**: User's full name
+- **Email**: Contact email
+- **Phone**: Phone number
+- **Serial Number**: Unique ticket ID
+- **Status**: Used / Not Used
+- **Registration Date**: Timestamp
+
+## 🔌 API Integration
+
+### Get All Registrations
+```
+GET /api/admin/registrations
+```
+
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "serial_number": "TKT-1234567890",
+    "is_used": false,
+    "registration_date": "2025-11-04T10:30:00"
+  }
+]
+```
+
+## 🎨 Tailwind CSS v4
+
+Using Tailwind CSS v4 with PostCSS plugin:
+```javascript
+// postcss.config.js
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {}
+  }
+}
+```
+
+## 🚢 Building for Production
+
+```bash
+npm run build
+```
+
+Output: `dist/` folder
+
+## 📄 License
+
+See main repository LICENSE file.
+
+## 🔗 Related
+
+- [Backend API](../../backend/)
+- [Registration Form](../registration-form/)
+- [Flutter Scanner App](../../ticket_scanner/)
