@@ -17,7 +17,6 @@ build/
 
 # Environment
 .env
-.env.local
 
 # IDEs
 .vscode/

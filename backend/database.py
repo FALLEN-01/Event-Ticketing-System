@@ -4,11 +4,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Supabase configuration
-SUPABASE_URL = "https://ckkyegjnbrcmripozjahe.supabase.co"
+SUPABASE_URL = "https://ckkyegjnbcrmipozjahe.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNra3llZ2puYmNybWlwb3pqYWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNDMzNTAsImV4cCI6MjA3NzgxOTM1MH0.7yNGRvhzA82h7STPSEy4TwgSxqQlkbrkBlWYOBYbgR8"
 
 # PostgreSQL connection
-# For Render (IPv4): Use direct connection with correct hostname
+# For Render (IPv4): Use Session Pooler connection string from env variable
 # For local development: Use direct connection on port 5432
 import os
 
@@ -17,7 +17,7 @@ if os.getenv("DATABASE_URL"):
     DATABASE_URL = os.getenv("DATABASE_URL")
 else:
     # Fallback to direct connection for local development
-    DATABASE_URL = "postgresql+psycopg2://postgres:lDUNu6JSD28FCmfS@db.ckkyegjnbrcmripozjahe.supabase.co:5432/postgres"
+    DATABASE_URL = "postgresql+psycopg2://postgres:falloutcode000@db.ckkyegjnbcrmipozjahe.supabase.co:5432/postgres"
 
 # Create SQLAlchemy engine for PostgreSQL
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
