@@ -8,11 +8,12 @@ SUPABASE_URL = "https://ckkyegjnbcrmipozjahe.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNra3llZ2puYmNybWlwb3pqYWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNDMzNTAsImV4cCI6MjA3NzgxOTM1MH0.7yNGRvhzA82h7STPSEy4TwgSxqQlkbrkBlWYOBYbgR8"
 
 # PostgreSQL connection - Using connection pooler for external connections (Render)
-# Port 6543 is the connection pooler port (use this for Render/external)
-# Port 5432 is direct connection (use this for local development)
+# Port 6543 is the Session Pooler (use for Render/IPv4-only platforms)
+# Port 5432 is direct connection (use for local development)
 import os
 PORT = "6543" if os.getenv("RENDER") else "5432"
-DATABASE_URL = f"postgresql+psycopg2://postgres.ckkyegjnbcrmipozjahe:lDUNu6JSD28FCmfS@aws-0-ap-south-1.pooler.supabase.com:{PORT}/postgres"
+HOST = "aws-0-ap-south-1.pooler.supabase.com" if os.getenv("RENDER") else "db.ckkyegjnbcrmipozjahe.supabase.co"
+DATABASE_URL = f"postgresql+psycopg2://postgres:lDUNu6JSD28FCmfS@{HOST}:{PORT}/postgres"
 
 # Create SQLAlchemy engine for PostgreSQL
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
