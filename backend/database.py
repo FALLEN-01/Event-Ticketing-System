@@ -1,7 +1,3 @@
-"""
-Database configuration and connection
-Using Supabase PostgreSQL
-"""
 from supabase import create_client, Client
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,8 +7,12 @@ from sqlalchemy.orm import sessionmaker
 SUPABASE_URL = "https://ckkyegjnbcrmipozjahe.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNra3llZ2puYmNybWlwb3pqYWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNDMzNTAsImV4cCI6MjA3NzgxOTM1MH0.7yNGRvhzA82h7STPSEy4TwgSxqQlkbrkBlWYOBYbgR8"
 
-# PostgreSQL connection
-DATABASE_URL = "postgresql+psycopg2://postgres:lDUNu6JSD28FCmfS@db.ckkyegjnbcrmipozjahe.supabase.co:5432/postgres"
+# PostgreSQL connection - Using connection pooler for external connections (Render)
+# Port 6543 is the connection pooler port (use this for Render/external)
+# Port 5432 is direct connection (use this for local development)
+import os
+PORT = "6543" if os.getenv("RENDER") else "5432"
+DATABASE_URL = f"postgresql+psycopg2://postgres.ckkyegjnbcrmipozjahe:lDUNu6JSD28FCmfS@aws-0-ap-south-1.pooler.supabase.com:{PORT}/postgres"
 
 # Create SQLAlchemy engine for PostgreSQL
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
