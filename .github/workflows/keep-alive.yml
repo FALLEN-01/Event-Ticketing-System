@@ -2,7 +2,7 @@ name: Keep Render App Alive
 
 on:
   schedule:
-    - cron: "*/8 * * * *"  # Run every 8 minutes to prevent Render free tier sleep
+    - cron: "*/5 * * * *"  # Run every 5 minutes to prevent Render free tier sleep
   workflow_dispatch:        # Allows manual run from GitHub Actions tab
 
 jobs:
