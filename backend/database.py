@@ -19,8 +19,8 @@ if os.getenv("DATABASE_URL"):
 else:
     # Fallback to Session Pooler for IPv4 compatibility (Render requirement)
     # Session mode: port 5432, supports persistent connections with IPv4
-    # Format: postgresql+psycopg2://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
-    DATABASE_URL = "postgresql+psycopg2://postgres.ckkyegjnbcrmipozjahe:lDUNu6JSD28FCmfS@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+    # Format: postgresql+psycopg2://postgres.[ref]:[password]@aws-1-[region].pooler.supabase.com:5432/postgres
+    DATABASE_URL = "postgresql+psycopg2://postgres.ckkyegjnbcrmipozjahe:lDUNu6JSD28FCmfS@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
 
 # SSL configuration for PostgreSQL connection
 ssl_args = {}
