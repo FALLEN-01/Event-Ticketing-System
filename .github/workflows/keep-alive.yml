@@ -5,18 +5,45 @@ on:
     - cron: "*/5 * * * *"  # Run every 5 minutes to prevent Render free tier sleep
   workflow_dispatch:        # Allows manual run from GitHub Actions tab
 
+concurrency:
+  group: keep-render-app-alive
+  cancel-in-progress: true
+
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Ping the Render app
+      - name: Ping the Render app (with retries)
         run: |
-          echo "Pinging Render app to prevent sleep..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://event-ticketing-system-devx.onrender.com/ping)
-          echo "Response status: $response"
-          if [ $response -eq 200 ]; then
-            echo "✅ Ping successful!"
-          else
-            echo "❌ Ping failed with status $response"
-            exit 1
-          fi
+          set -eo pipefail
+          URL="https://event-ticketing-system-devx.onrender.com/ping"
+          MAX_RETRIES=5
+          # short connect and overall timeouts to fail fast on networking issues
+          CURL_OPTS=(--silent --show-error --fail --connect-timeout 10 --max-time 20)
+
+          echo "Pinging $URL (up to $MAX_RETRIES attempts)"
+          last_status=""
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i..."
+            # Capture body and status separately for better diagnostics
+            body_file=$(mktemp)
+            status=$(curl "${CURL_OPTS[@]}" -o "$body_file" -w "%{http_code}" "$URL" || true)
+            echo "HTTP status: $status"
+            if [ "$status" = "200" ]; then
+              echo "✅ Ping successful on attempt $i"
+              echo "Response body:"; cat "$body_file" || true
+              rm -f "$body_file"
+              exit 0
+            fi
+            last_status=$status
+            echo "Response body (trimmed):"
+            head -n 50 "$body_file" || true
+            rm -f "$body_file"
+            sleep_time=$((i * 2))
+            echo "Sleeping $sleep_time seconds before retry..."
+            sleep $sleep_time
+          done
+
+          echo "❌ All $MAX_RETRIES attempts failed. Last status: $last_status"
+          exit 1
