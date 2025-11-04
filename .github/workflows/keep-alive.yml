@@ -1,0 +1,22 @@
+name: Keep Render App Alive
+
+on:
+  schedule:
+    - cron: "*/8 * * * *"  # Run every 8 minutes to prevent Render free tier sleep
+  workflow_dispatch:        # Allows manual run from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the Render app
+        run: |
+          echo "Pinging Render app to prevent sleep..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-app-name.onrender.com/ping)
+          echo "Response status: $response"
+          if [ $response -eq 200 ]; then
+            echo "✅ Ping successful!"
+          else
+            echo "❌ Ping failed with status $response"
+            exit 1
+          fi

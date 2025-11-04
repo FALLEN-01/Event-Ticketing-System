@@ -61,6 +61,18 @@ async def health_check():
     }
 
 
+@app.get("/ping")
+async def ping():
+    """
+    Ping endpoint to keep Render app alive
+    Called by GitHub Actions every 8 minutes
+    """
+    return {
+        "status": "pong",
+        "message": "Server is alive"
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     import logging
