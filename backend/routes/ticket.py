@@ -1,7 +1,3 @@
-"""
-Ticket verification routes
-Handles QR code scanning and ticket verification for entry
-"""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel

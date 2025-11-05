@@ -1,7 +1,3 @@
-"""
-FastAPI Backend for Event Ticket System
-Phase 1: Core registration and admin viewing
-"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -9,22 +5,28 @@ import os
 
 from database import init_db
 from routes import registration, admin, ticket
+from utils.storage import initialize_storage_buckets
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize database on startup"""
+    """Initialize database and storage on startup"""
     print("🚀 Initializing database...")
     init_db()
     print("✅ Database initialized successfully!")
+    
+    print("☁️  Initializing Supabase Storage buckets...")
+    await initialize_storage_buckets()
+    print("✅ Storage buckets ready!")
+    
     yield
     print("👋 Shutting down...")
 
 
 app = FastAPI(
     title="Event Ticket System",
-    description="Backend API for event registration and ticket management - Phase 1",
-    version="1.0.0",
+    description="Backend API for event registration and ticket management - Phase 2 (Supabase Storage)",
+    version="2.0.1",
     lifespan=lifespan
 )
 
@@ -50,10 +52,10 @@ app.include_router(ticket.router)
 @app.get("/")
 async def root():
     return {
-        "message": "Event Ticket System API - Phase 1",
+        "message": "Event Ticket System API - Phase 2",
         "status": "active",
-        "version": "1.0.0",
-        "phase": "1 - Core Registration & Admin View"
+        "version": "2.0.0",
+        "phase": "2 - Full Registration with Payment & Ticket Generation"
     }
 
 
@@ -61,7 +63,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "phase": "1"
+        "phase": "2"
     }
 
 
@@ -92,7 +94,7 @@ if __name__ == "__main__":
     logger.info("🚀 Starting Event Ticketing System Backend")
     logger.info("=" * 60)
     logger.info(f"📦 App Name: Event Ticket System")
-    logger.info(f"📌 Version: 1.0.0")
+    logger.info(f"📌 Version: 2.0.0 (Phase 2)")
     logger.info(f"🌐 Host: 0.0.0.0")
     logger.info(f"🔌 Port: 8000")
     logger.info(f"🔄 Hot Reload: Enabled")
