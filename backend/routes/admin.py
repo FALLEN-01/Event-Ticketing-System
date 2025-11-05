@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from database import get_db
-from models.registration import Registration, Payment, Attendance, Message, PaymentStatus, PaymentType, MessageType
+from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType
 from utils.qr_generator import generate_ticket_qr
 from utils.email import send_approval_email, send_rejection_email
 
@@ -22,6 +22,7 @@ class RegistrationSummary(BaseModel):
     status: str
     payment_type: str
     payment_screenshot: Optional[str]
+    tickets_count: int
     created_at: str
 
     class Config:
@@ -95,6 +96,7 @@ async def get_all_registrations(
                 status=payment.status.value,
                 payment_type=payment.payment_type.value,
                 payment_screenshot=payment.payment_screenshot,
+                tickets_count=db.query(Ticket).filter(Ticket.registration_id == reg.id).count(),
                 created_at=reg.created_at.isoformat()
             )
             for reg, payment in results
@@ -109,7 +111,7 @@ async def get_registration_detail(
 ):
     """
     Get detailed information for a specific registration
-    Joins with Payment and Attendance tables for complete view
+    Includes all tickets and their attendance records
     """
     registration = db.query(Registration).filter(Registration.id == registration_id).first()
     
@@ -122,8 +124,26 @@ async def get_registration_detail(
     # Get related payment info
     payment = db.query(Payment).filter(Payment.registration_id == registration_id).first()
     
-    # Get related attendance info
-    attendance = db.query(Attendance).filter(Attendance.registration_id == registration_id).first()
+    # Get all tickets for this registration
+    tickets = db.query(Ticket).filter(Ticket.registration_id == registration_id).all()
+    
+    # Get attendance for each ticket
+    tickets_data = []
+    for ticket in tickets:
+        attendance = db.query(Attendance).filter(Attendance.ticket_id == ticket.id).first()
+        tickets_data.append({
+            "id": ticket.id,
+            "member_name": ticket.member_name,
+            "serial_code": ticket.serial_code,
+            "qr_code_path": ticket.qr_code_path,
+            "is_active": ticket.is_active,
+            "attendance": {
+                "checked_in": attendance.checked_in if attendance else False,
+                "check_in_time": attendance.check_in_time.isoformat() if attendance and attendance.check_in_time else None,
+                "checked_out": attendance.checked_out if attendance else False,
+                "check_out_time": attendance.check_out_time.isoformat() if attendance and attendance.check_out_time else None,
+            }
+        })
     
     return {
         "id": registration.id,
@@ -132,8 +152,7 @@ async def get_registration_detail(
         "phone": registration.phone,
         "team_name": registration.team_name,
         "members": registration.members,
-        "serial_code": registration.serial_code,
-        "qr_code_path": registration.qr_code_path,
+        "payment_type": registration.payment_type.value,
         "created_at": registration.created_at.isoformat(),
         "updated_at": registration.updated_at.isoformat(),
         "payment": {
@@ -146,12 +165,8 @@ async def get_registration_detail(
             "approved_by": payment.approved_by if payment else None,
             "approved_at": payment.approved_at.isoformat() if payment and payment.approved_at else None,
         },
-        "attendance": {
-            "checked_in": attendance.checked_in if attendance else False,
-            "check_in_time": attendance.check_in_time.isoformat() if attendance and attendance.check_in_time else None,
-            "checked_out": attendance.checked_out if attendance else False,
-            "check_out_time": attendance.check_out_time.isoformat() if attendance and attendance.check_out_time else None,
-        }
+        "tickets": tickets_data,
+        "tickets_count": len(tickets_data)
     }
 
 
@@ -179,8 +194,8 @@ async def approve_registration(
     db: Session = Depends(get_db)
 ):
     """
-    Approve a registration and send ticket via email
-    Updates Payment table status to APPROVED
+    Approve a registration and send tickets via email
+    Generates QR codes for all tickets (1 for individual, N for bulk)
     """
     registration = db.query(Registration).filter(Registration.id == registration_id).first()
     
@@ -206,43 +221,56 @@ async def approve_registration(
         )
     
     try:
-        # Generate QR code ticket
-        qr_code_path = generate_ticket_qr(
-            serial_code=registration.serial_code,
-            name=registration.name,
-            email=registration.email
-        )
+        # Get all tickets for this registration
+        tickets = db.query(Ticket).filter(Ticket.registration_id == registration_id).all()
+        
+        if not tickets:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No tickets found for this registration"
+            )
+        
+        # Generate QR codes for all tickets
+        qr_code_paths = []
+        for ticket in tickets:
+            qr_code_path = generate_ticket_qr(
+                serial_code=ticket.serial_code,
+                name=ticket.member_name,
+                email=registration.email
+            )
+            
+            # Update ticket with QR code path
+            ticket.qr_code_path = qr_code_path
+            qr_code_paths.append(qr_code_path)
         
         # Update payment status
         payment.status = PaymentStatus.APPROVED
         payment.approved_by = approved_by
         payment.approved_at = datetime.utcnow()
         
-        # Update registration with QR code path
-        registration.qr_code_path = qr_code_path
-        
         db.commit()
         
-        # Send approval email with ticket
+        # Send approval email with all tickets
         email_sent = await send_approval_email(
             to_email=registration.email,
             name=registration.name,
-            serial_code=registration.serial_code,
-            qr_code_path=qr_code_path,
-            team_name=registration.team_name
+            serial_code=tickets[0].serial_code,  # Send first ticket serial as reference
+            qr_code_path=qr_code_paths[0] if len(qr_code_paths) == 1 else None,  # Single QR for individual
+            team_name=registration.team_name,
+            qr_code_paths=qr_code_paths if len(qr_code_paths) > 1 else None  # Multiple QRs for bulk
         )
         
         # Log email in Message table
         message = Message(
             registration_id=registration.id,
             message_type=MessageType.APPROVAL,
-            subject="🎉 Event Registration Approved - Your Ticket Inside!",
-            body=f"Approval email sent to {registration.email}",
+            subject="🎉 Event Registration Approved - Your Ticket(s) Inside!",
+            body=f"Approval email sent to {registration.email} with {len(tickets)} ticket(s)",
             sent=email_sent,
             sent_at=datetime.utcnow() if email_sent else None,
             recipient_email=registration.email,
             has_attachment=True,
-            attachment_path=qr_code_path
+            attachment_path=qr_code_paths[0] if qr_code_paths else None
         )
         db.add(message)
         db.commit()
@@ -250,13 +278,21 @@ async def approve_registration(
         return {
             "message": "Registration approved successfully",
             "email_sent": email_sent,
-            "qr_code_generated": True,
+            "qr_codes_generated": len(qr_code_paths),
+            "tickets_count": len(tickets),
             "registration": {
                 "id": registration.id,
                 "name": registration.name,
                 "email": registration.email,
                 "status": payment.status.value,
-                "serial_code": registration.serial_code
+                "tickets": [
+                    {
+                        "serial_code": t.serial_code,
+                        "member_name": t.member_name,
+                        "qr_code_path": t.qr_code_path
+                    }
+                    for t in tickets
+                ]
             }
         }
         

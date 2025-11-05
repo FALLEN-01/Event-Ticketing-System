@@ -9,6 +9,7 @@ A complete event registration and ticket management system with web and mobile i
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
 - [Project Structure](#️-project-structure)
+- [Quick Start with Docker](#-quick-start-with-docker)
 - [Installation](#-installation)
 - [Running the Application](#-running-the-application)
 - [API Documentation](#-api-documentation)
@@ -24,12 +25,37 @@ A complete event registration and ticket management system with web and mobile i
 
 - 🎟️ **Event Registration** - User-friendly form for event sign-ups
 - 💳 **Payment Integration** - Upload payment screenshots (Phase 2)
+- ☁️ **Cloud Storage** - Cloudinary for secure file uploads
 - ✅ **Admin Approval System** - Review and approve/reject registrations
 - 📧 **Email Tickets** - Automatic ticket delivery via email (Phase 4)
 - 🔲 **QR Code Generation** - Unique QR codes for each ticket
 - 📱 **Mobile Scanner** - Flutter app for ticket verification
 - 📊 **Dashboard Analytics** - View registration statistics
 - 🔒 **Secure Authentication** - Admin-only access control
+- 🐳 **Docker Support** - Easy deployment with Docker Compose
+
+---
+
+## 🚀 Quick Start with Docker
+
+The fastest way to run the entire application:
+
+```bash
+# Clone the repository
+git clone https://github.com/FALLEN-01/Event-Ticketing-System.git
+cd Event-Ticketing-System
+
+# Start all services with Docker Compose
+docker-compose up -d --build
+
+# Access the applications:
+# - Registration Form: http://localhost:5000
+# - Admin Dashboard: http://localhost:5001
+# - Backend API: http://localhost:8000
+# - API Docs: http://localhost:8000/docs
+```
+
+📚 **For detailed Docker instructions, see [DOCKER.md](./DOCKER.md)**
 
 ---
 

@@ -7,9 +7,11 @@ from pathlib import Path
 import uuid
 
 from database import get_db
-from models.registration import Registration, Payment, Attendance, Message, PaymentStatus, PaymentType, MessageType
+from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType
 from utils.email import send_pending_confirmation_email
 from utils.storage import upload_payment_screenshot
+import json
+from datetime import datetime
 
 router = APIRouter(prefix="/api", tags=["Registration"])
 
@@ -97,14 +99,13 @@ async def register(
     
     try:
         # 1. Create registration record
-        serial_code = Registration.generate_serial_code()
         new_registration = Registration(
             name=name,
             email=email,
             phone=phone,
             team_name=team_name,
             members=members,
-            serial_code=serial_code
+            payment_type=PaymentType.BULK if payment_type == "bulk" else PaymentType.INDIVIDUAL
         )
         db.add(new_registration)
         db.flush()  # Get the registration ID
@@ -117,13 +118,66 @@ async def register(
             status=PaymentStatus.PENDING
         )
         db.add(new_payment)
+        db.flush()
         
-        # 3. Create attendance record (empty initially)
-        new_attendance = Attendance(
-            registration_id=new_registration.id,
-            checked_in=False
-        )
-        db.add(new_attendance)
+        # 3. Create tickets based on payment type
+        tickets_created = []
+        if payment_type == "individual":
+            # Individual registration: create 1 ticket
+            ticket = Ticket(
+                registration_id=new_registration.id,
+                member_name=name,
+                serial_code=Ticket.generate_serial_code(new_registration.id, is_bulk=False)
+            )
+            db.add(ticket)
+            db.flush()
+            tickets_created.append(ticket)
+            
+            # Create attendance record for this ticket
+            attendance = Attendance(
+                ticket_id=ticket.id,
+                checked_in=False
+            )
+            db.add(attendance)
+            
+        else:  # bulk
+            # Parse members from JSON or CSV
+            member_names = []
+            if members:
+                try:
+                    # Try JSON format first
+                    member_names = json.loads(members)
+                    if not isinstance(member_names, list):
+                        member_names = [str(members)]
+                except json.JSONDecodeError:
+                    # Fall back to CSV
+                    member_names = [m.strip() for m in members.split(',') if m.strip()]
+            
+            # Validate member count for bulk (exactly 4 people)
+            if len(member_names) != 4:
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Bulk registration requires exactly 4 members. Got {len(member_names)} members."
+                )
+            
+            # Create one ticket per member
+            for idx, member_name in enumerate(member_names):
+                ticket = Ticket(
+                    registration_id=new_registration.id,
+                    member_name=member_name,
+                    serial_code=Ticket.generate_serial_code(new_registration.id, is_bulk=True, member_index=idx)
+                )
+                db.add(ticket)
+                db.flush()
+                tickets_created.append(ticket)
+                
+                # Create attendance record for this ticket
+                attendance = Attendance(
+                    ticket_id=ticket.id,
+                    checked_in=False
+                )
+                db.add(attendance)
         
         # Commit all changes
         db.commit()
@@ -131,20 +185,19 @@ async def register(
         
         # 4. Send confirmation email and log it
         try:
-            email_sent = await send_pending_confirmation_email(email, name, serial_code)
+            email_sent = await send_pending_confirmation_email(email, name, tickets_created[0].serial_code if tickets_created else "PENDING")
             
             # Log the email in messages table
             email_log = Message(
                 registration_id=new_registration.id,
                 message_type=MessageType.CONFIRMATION,
                 subject="Event Registration Received - Pending Review",
-                body=f"Confirmation email sent to {email}",
+                body=f"Confirmation email sent to {email}. Created {len(tickets_created)} ticket(s).",
                 sent=email_sent,
                 recipient_email=email,
                 has_attachment=False
             )
             if email_sent:
-                from datetime import datetime
                 email_log.sent_at = datetime.utcnow()
             db.add(email_log)
             db.commit()
@@ -174,7 +227,7 @@ async def register(
 async def check_registration_status(email: str, db: Session = Depends(get_db)):
     """
     Check registration status by email
-    Joins with Payment table to get approval status
+    Returns registration info with ticket count
     """
     registration = db.query(Registration).filter(Registration.email == email).first()
     if not registration:
@@ -187,11 +240,20 @@ async def check_registration_status(email: str, db: Session = Depends(get_db)):
     payment = db.query(Payment).filter(Payment.registration_id == registration.id).first()
     payment_status = payment.status.value if payment else "pending"
     
+    # Count tickets
+    tickets_count = db.query(Ticket).filter(Ticket.registration_id == registration.id).count()
+    
+    # Get ticket serial codes
+    tickets = db.query(Ticket).filter(Ticket.registration_id == registration.id).all()
+    ticket_serials = [t.serial_code for t in tickets]
+    
     return {
         "id": registration.id,
         "name": registration.name,
         "email": registration.email,
+        "payment_type": registration.payment_type.value,
         "status": payment_status,
-        "serial_code": registration.serial_code,
+        "tickets_count": tickets_count,
+        "ticket_serials": ticket_serials,
         "created_at": registration.created_at.isoformat()
     }

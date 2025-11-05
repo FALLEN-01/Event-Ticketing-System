@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 from database import get_db
-from models.registration import Registration
+from models.registration import Registration, Ticket, Attendance, PaymentStatus, Payment
+from datetime import datetime
 
 router = APIRouter(tags=["Ticket Verification"])
 
@@ -12,13 +13,13 @@ router = APIRouter(tags=["Ticket Verification"])
 class TicketDetails(BaseModel):
     """Response model for ticket verification"""
     serial_code: str
-    name: str
+    member_name: str
     email: str
     phone: str
     team_name: Optional[str]
-    members: Optional[str]
-    ticket_used: bool
-    status: str
+    is_active: bool
+    checked_in: bool
+    check_in_time: Optional[str]
 
     class Config:
         from_attributes = True
@@ -44,41 +45,80 @@ async def verify_ticket(
 ):
     """
     Verify if a ticket serial code is valid
-    Returns participant details if valid
+    Returns ticket details if valid
     """
-    # Find registration by serial code
-    registration = db.query(Registration).filter(
-        Registration.serial_code == serial.upper()
+    # Find ticket by serial code
+    ticket = db.query(Ticket).filter(
+        Ticket.serial_code == serial.upper()
     ).first()
     
-    if not registration:
+    if not ticket:
         return TicketVerifyResponse(
             valid=False,
             message="Invalid serial code. Ticket not found.",
             details=None
         )
     
-    # Check if registration is approved
-    if registration.status != "approved":
+    # Get registration info
+    registration = db.query(Registration).filter(Registration.id == ticket.registration_id).first()
+    if not registration:
         return TicketVerifyResponse(
             valid=False,
-            message=f"Ticket status is '{registration.status}'. Only approved tickets are valid.",
+            message="Registration not found for this ticket.",
             details=None
         )
     
-    # Check if ticket has already been used
-    if registration.ticket_used:
+    # Check if payment is approved
+    payment = db.query(Payment).filter(Payment.registration_id == registration.id).first()
+    if not payment or payment.status != PaymentStatus.APPROVED:
         return TicketVerifyResponse(
             valid=False,
-            message="Ticket has already been used for entry.",
-            details=TicketDetails.model_validate(registration)
+            message=f"Ticket payment is not approved. Status: {payment.status.value if payment else 'unknown'}",
+            details=None
+        )
+    
+    # Check if ticket is active
+    if not ticket.is_active:
+        return TicketVerifyResponse(
+            valid=False,
+            message="Ticket has been deactivated.",
+            details=None
+        )
+    
+    # Get attendance info
+    attendance = db.query(Attendance).filter(Attendance.ticket_id == ticket.id).first()
+    
+    # Check if already checked in
+    if attendance and attendance.checked_in:
+        return TicketVerifyResponse(
+            valid=False,
+            message=f"Ticket already checked in at {attendance.check_in_time.isoformat() if attendance.check_in_time else 'unknown time'}.",
+            details=TicketDetails(
+                serial_code=ticket.serial_code,
+                member_name=ticket.member_name,
+                email=registration.email,
+                phone=registration.phone,
+                team_name=registration.team_name,
+                is_active=ticket.is_active,
+                checked_in=True,
+                check_in_time=attendance.check_in_time.isoformat() if attendance.check_in_time else None
+            )
         )
     
     # Ticket is valid
     return TicketVerifyResponse(
         valid=True,
-        message="Ticket is valid and ready for entry.",
-        details=TicketDetails.model_validate(registration)
+        message="Ticket is valid and ready for check-in.",
+        details=TicketDetails(
+            serial_code=ticket.serial_code,
+            member_name=ticket.member_name,
+            email=registration.email,
+            phone=registration.phone,
+            team_name=registration.team_name,
+            is_active=ticket.is_active,
+            checked_in=False,
+            check_in_time=None
+        )
     )
 
 
@@ -88,38 +128,62 @@ async def mark_ticket_used(
     db: Session = Depends(get_db)
 ):
     """
-    Mark a ticket as used after successful entry
+    Mark a ticket as checked in (used) after successful entry
+    Updates the attendance record for this ticket
     """
-    # Find registration by serial code
-    registration = db.query(Registration).filter(
-        Registration.serial_code == serial.upper()
+    # Find ticket by serial code
+    ticket = db.query(Ticket).filter(
+        Ticket.serial_code == serial.upper()
     ).first()
     
-    if not registration:
+    if not ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found"
         )
     
-    # Check if ticket is already used
-    if registration.ticket_used:
+    # Check if ticket is active
+    if not ticket.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ticket has already been marked as used"
+            detail="Ticket is deactivated and cannot be used"
         )
     
-    # Check if registration is approved
-    if registration.status != "approved":
+    # Get registration and check payment status
+    registration = db.query(Registration).filter(Registration.id == ticket.registration_id).first()
+    payment = db.query(Payment).filter(Payment.registration_id == ticket.registration_id).first()
+    
+    if not payment or payment.status != PaymentStatus.APPROVED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot mark ticket as used. Status is '{registration.status}'"
+            detail="Payment not approved. Cannot check in."
         )
     
-    # Mark ticket as used
-    registration.ticket_used = True
+    # Get or create attendance record
+    attendance = db.query(Attendance).filter(Attendance.ticket_id == ticket.id).first()
+    
+    if not attendance:
+        # Create attendance record if it doesn't exist
+        attendance = Attendance(
+            ticket_id=ticket.id,
+            checked_in=False
+        )
+        db.add(attendance)
+        db.flush()
+    
+    # Check if already checked in
+    if attendance.checked_in:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ticket already checked in at {attendance.check_in_time.isoformat() if attendance.check_in_time else 'unknown time'}"
+        )
+    
+    # Mark as checked in
+    attendance.checked_in = True
+    attendance.check_in_time = datetime.utcnow()
     db.commit()
     
     return MarkUsedResponse(
         success=True,
-        message=f"Ticket marked as used successfully for {registration.name}"
+        message=f"Ticket checked in successfully for {ticket.member_name}"
     )

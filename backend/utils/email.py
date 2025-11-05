@@ -120,18 +120,21 @@ async def send_approval_email(
     to_email: str,
     name: str,
     serial_code: str,
-    qr_code_path: str,
-    team_name: Optional[str] = None
+    qr_code_path: Optional[str] = None,
+    team_name: Optional[str] = None,
+    qr_code_paths: Optional[list] = None
 ) -> bool:
     """
-    Send approval email with ticket QR code
+    Send approval email with ticket QR code(s)
+    Supports single QR (individual) or multiple QRs (bulk)
     
     Args:
         to_email: Recipient email address
         name: Name of the ticket holder
-        serial_code: Unique serial code for the ticket
-        qr_code_path: Path to the QR code image
+        serial_code: Unique serial code for the first ticket
+        qr_code_path: Path to single QR code (for individual registration)
         team_name: Optional team name
+        qr_code_paths: List of QR code paths (for bulk registration)
     
     Returns:
         bool: True if email sent successfully
@@ -139,6 +142,10 @@ async def send_approval_email(
     subject = "🎉 Your Event Registration is Approved!"
     
     team_info = f"<p><strong>Team:</strong> {team_name}</p>" if team_name else ""
+    
+    # Determine if this is bulk or individual
+    is_bulk = qr_code_paths and len(qr_code_paths) > 1
+    ticket_count_text = f"<p>You have <strong>{len(qr_code_paths)} tickets</strong> for your team members.</p>" if is_bulk else ""
     
     html_body = f"""
     <!DOCTYPE html>
@@ -166,21 +173,27 @@ async def send_approval_email(
                 <p>Congratulations! Your event registration has been <strong>approved</strong>.</p>
                 
                 {team_info}
+                {ticket_count_text}
                 
                 <div class="ticket-box">
-                    <h2>Your Event Ticket</h2>
-                    <p>Your unique serial code:</p>
+                    <h2>Your Event Ticket{'s' if is_bulk else ''}</h2>
+                    <p>Reference serial code:</p>
                     <div class="serial">{serial_code}</div>
-                    <p style="margin-top: 20px; color: #666;">Your QR code ticket is attached to this email.</p>
-                    <p style="font-size: 14px; color: #999;">Please save the QR code and present it at the event entrance.</p>
+                    <p style="margin-top: 20px; color: #666;">
+                        {'All QR code tickets are attached to this email.' if is_bulk else 'Your QR code ticket is attached to this email.'}
+                    </p>
+                    <p style="font-size: 14px; color: #999;">
+                        {'Each team member needs their own QR code ticket.' if is_bulk else 'Please save the QR code and present it at the event entrance.'}
+                    </p>
                 </div>
                 
                 <h3>Important Instructions:</h3>
                 <ul>
-                    <li>Save the attached QR code ticket on your phone</li>
-                    <li>Bring a printed copy or show the QR code on your phone at entry</li>
+                    {'<li>Distribute QR codes to each team member</li>' if is_bulk else ''}
+                    <li>Save the attached QR code ticket{'s' if is_bulk else ''} on {'your phones' if is_bulk else 'your phone'}</li>
+                    <li>Bring printed cop{'ies' if is_bulk else 'y'} or show the QR code on {'phones' if is_bulk else 'your phone'} at entry</li>
                     <li>Arrive at least 30 minutes before the event</li>
-                    <li>Your serial code is unique - do not share it</li>
+                    <li>{'Each serial code is unique - do not share' if is_bulk else 'Your serial code is unique - do not share it'}</li>
                 </ul>
                 
                 <p style="margin-top: 30px;">We look forward to seeing you at the event!</p>
@@ -196,7 +209,16 @@ async def send_approval_email(
     </html>
     """
     
-    attachments = [qr_code_path] if os.path.exists(qr_code_path) else []
+    # Determine which attachments to use
+    if is_bulk and qr_code_paths:
+        # Multiple QR codes for bulk registration
+        attachments = qr_code_paths
+    elif qr_code_path:
+        # Single QR code for individual registration
+        attachments = [qr_code_path]
+    else:
+        attachments = []
+    
     return await send_email_with_attachments(to_email, subject, html_body, attachments)
 
 

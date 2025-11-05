@@ -4,8 +4,12 @@ from contextlib import asynccontextmanager
 import os
 
 from database import init_db
-from routes import registration, admin, ticket
+from routes import registration, admin, ticket, test
 from utils.storage import initialize_storage_buckets
+
+# Import for test route
+from fastapi import File, UploadFile, HTTPException
+from utils.storage import upload_payment_screenshot
 
 
 @asynccontextmanager
@@ -15,9 +19,9 @@ async def lifespan(app: FastAPI):
     init_db()
     print("✅ Database initialized successfully!")
     
-    print("☁️  Initializing Supabase Storage buckets...")
+    print("☁️  Initializing Cloudinary storage...")
     await initialize_storage_buckets()
-    print("✅ Storage buckets ready!")
+    print("✅ Cloudinary storage ready!")
     
     yield
     print("👋 Shutting down...")
@@ -25,8 +29,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Event Ticket System",
-    description="Backend API for event registration and ticket management - Phase 2 (Supabase Storage)",
-    version="2.0.1",
+    description="Backend API for event registration and ticket management - Phase 2 (Cloudinary Storage)",
+    version="2.1.0",
     lifespan=lifespan
 )
 
@@ -47,6 +51,7 @@ app.add_middleware(
 app.include_router(registration.router)
 app.include_router(admin.router)
 app.include_router(ticket.router)
+app.include_router(test.router)  # Test endpoints
 
 
 @app.get("/")
@@ -54,9 +59,55 @@ async def root():
     return {
         "message": "Event Ticket System API - Phase 2",
         "status": "active",
-        "version": "2.0.0",
-        "phase": "2 - Full Registration with Payment & Ticket Generation"
+        "version": "2.1.0",
+        "phase": "2 - Full Registration with Payment & Ticket Generation",
+        "storage": "Cloudinary"
     }
+
+
+@app.post("/test/upload")
+async def test_upload(file: UploadFile = File(...)):
+    """
+    Test endpoint to verify Cloudinary upload is working
+    Upload any image file to test the integration
+    """
+    try:
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}"
+            )
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Upload to Cloudinary
+        file_url = await upload_payment_screenshot(file_content, file.filename)
+        
+        if not file_url:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to upload file to Cloudinary"
+            )
+        
+        return {
+            "success": True,
+            "message": "File uploaded successfully to Cloudinary!",
+            "file_url": file_url,
+            "filename": file.filename,
+            "content_type": file.content_type,
+            "size_bytes": len(file_content)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Upload failed: {str(e)}"
+        )
 
 
 @app.get("/health")
