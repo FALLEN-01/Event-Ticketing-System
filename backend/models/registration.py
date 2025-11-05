@@ -134,9 +134,21 @@ class Ticket(Base):
     attendance = relationship("Attendance", back_populates="ticket", uselist=False, cascade="all, delete-orphan")
     
     @staticmethod
-    def generate_serial_code(prefix="EVT"):
-        """Generate a unique 12-character serial code"""
-        return f"{prefix}{datetime.now().strftime('%y')}-{secrets.token_hex(3).upper()}"
+    def generate_serial_code(registration_id, is_bulk=False, member_index=0):
+        """
+        Generate a unique serial code for a ticket
+        - Individual: EVT25-000123 format
+        - Bulk: TEAM45-A, TEAM45-B, etc. format (based on registration ID and member index)
+        """
+        if is_bulk:
+            # For bulk registrations, use team format with letter suffix
+            member_letter = chr(65 + member_index)  # A, B, C, D for indices 0, 1, 2, 3
+            return f"TEAM{registration_id:03d}-{member_letter}"
+        else:
+            # For individual registrations, use EVT format
+            year = datetime.now().strftime('%y')
+            # Use registration ID padded to 6 digits
+            return f"EVT{year}-{registration_id:06d}"
 
 
 # ==================== TABLE 4: ATTENDANCE ====================
