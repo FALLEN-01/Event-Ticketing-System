@@ -34,16 +34,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", '["*"]')
+# CORS configuration - Allow both local and hosted origins
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]')
 import json
 cors_origins = json.loads(CORS_ORIGINS) if isinstance(CORS_ORIGINS, str) else CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
