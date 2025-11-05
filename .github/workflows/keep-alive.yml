@@ -2,7 +2,7 @@ name: Keep Render App Alive
 
 on:
   schedule:
-    - cron: "*/1 * * * *"  # Run every 5 minutes to prevent Render free tier sleep
+    - cron: "*/1 * * * *"  # Run every 1 minutes to prevent Render free tier sleep
   workflow_dispatch:        # Allows manual run from GitHub Actions tab
 
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
     steps:
       - name: Ping the Render app (with retries)
         run: |
