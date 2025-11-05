@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import { API_ENDPOINTS } from './config'
 
@@ -149,18 +149,18 @@ function App() {
   }
 
   const renderStepIndicator = () => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.75rem' }}>
       {[
-        { num: 1, label: 'Basic Details' },
-        { num: 2, label: 'Contact Details' },
-        { num: 3, label: 'Verification' }
+        { num: 1, label: 'Details' },
+        { num: 2, label: 'Payment' },
+        { num: 3, label: 'Review' }
       ].map((step, index) => (
         <div key={step.num} style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div className={`step-indicator ${currentStep >= step.num ? 'step-active' : 'step-inactive'}`}>
               {step.num}
             </div>
-            <span style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: '#4b5563', fontWeight: '500', textAlign: 'center', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.7rem', marginTop: '0.35rem', color: '#4b5563', fontWeight: '500', textAlign: 'center', whiteSpace: 'nowrap' }}>
               {step.label}
             </span>
           </div>
@@ -173,21 +173,21 @@ function App() {
   )
 
   const renderStep1 = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Registration Type - Moved to Top */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
           Registration Type <span style={{ color: '#ef4444' }}>*</span>
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
           <button
             type="button"
             onClick={() => setPaymentType('individual')}
             className={`registration-card ${paymentType === 'individual' ? 'registration-card-active' : ''}`}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: '700', fontSize: '1rem' }}>Individual</div>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>1 Person</div>
+            <div style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.125rem' }}>Individual</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>1 Person</div>
             </div>
           </button>
           <button
@@ -195,48 +195,32 @@ function App() {
             onClick={() => setPaymentType('bulk')}
             className={`registration-card ${paymentType === 'bulk' ? 'registration-card-active' : ''}`}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: '700', fontSize: '1rem' }}>Bulk</div>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Multiple</div>
+            <div style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.125rem' }}>Bulk</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Multiple</div>
             </div>
           </button>
         </div>
       </div>
 
-      {/* Photo Upload */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-        <div style={{ position: 'relative' }}>
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            id="photo_upload"
-          />
-          <label htmlFor="photo_upload" className="photo-upload-circle">
-            <div style={{ fontSize: '2rem' }}>📷</div>
-            <span style={{ fontSize: '0.75rem', color: '#c4b5fd', fontWeight: '600', marginTop: '0.25rem' }}>Add Photo</span>
-          </label>
-        </div>
-      </div>
-
       {/* Full Name */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-          Full Name
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.4rem' }}>
+          Participant Name <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <input
           type="text"
           name="name"
           value={formData.name}
           onChange={handleInputChange}
-          className="orange-input"
-          placeholder="Enter Full Name"
+          className="lavender-input"
+          placeholder="Enter participant name"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.4rem' }}>
           Email Address <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <input
@@ -244,14 +228,14 @@ function App() {
           name="email"
           value={formData.email}
           onChange={handleInputChange}
-          className="orange-input"
+          className="lavender-input"
           placeholder="your.email@example.com"
         />
       </div>
 
       {/* Phone */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.4rem' }}>
           Phone Number <span style={{ color: '#ef4444' }}>*</span>
         </label>
         <input
@@ -259,14 +243,14 @@ function App() {
           name="phone"
           value={formData.phone}
           onChange={handleInputChange}
-          className="orange-input"
+          className="lavender-input"
           placeholder="+91 9876543210"
         />
       </div>
 
       {/* Constituency */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.4rem' }}>
           Constituency
         </label>
         <input
@@ -274,7 +258,7 @@ function App() {
           name="constituency"
           value={formData.constituency || ''}
           onChange={handleInputChange}
-          className="orange-input"
+          className="lavender-input"
           placeholder="Enter Constituency"
         />
       </div>
@@ -293,7 +277,7 @@ function App() {
               name="team_name"
               value={formData.team_name}
               onChange={handleInputChange}
-              className="orange-input"
+              className="lavender-input"
               placeholder="Enter your team name"
             />
           </div>
@@ -307,9 +291,9 @@ function App() {
               value={formData.members}
               onChange={handleInputChange}
               rows="4"
-              className="orange-input"
+              className="lavender-input"
               style={{ resize: 'none' }}
-              placeholder="Enter 4 team member names (comma-separated)"
+              placeholder="Enter team member names (comma-separated)"
             />
           </div>
         </div>
@@ -320,8 +304,8 @@ function App() {
   const renderStep2 = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Payment Proof</h2>
-        <p style={{ color: '#4b5563' }}>Upload your UPI payment screenshot</p>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Payment Confirmation</h2>
+        <p style={{ color: '#4b5563' }}>Upload your payment screenshot</p>
       </div>
 
       <div>
@@ -337,7 +321,7 @@ function App() {
             id="payment_screenshot"
           />
           <label htmlFor="payment_screenshot" style={{ cursor: 'pointer' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.75rem', color: '#c4b5fd' }}>📸</div>
+            <div style={{ fontSize: '3rem', marginBottom: '0.75rem', color: '#c4b5fd' }}>??</div>
             <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>Click to upload payment screenshot</p>
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>JPG, PNG, or WebP (Max 2MB)</p>
           </label>
@@ -346,7 +330,7 @@ function App() {
         {paymentScreenshot && (
           <div className="file-selected-box">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534' }}>
-              <span style={{ fontSize: '1.25rem' }}>✅</span>
+              <span style={{ fontSize: '1.25rem' }}>?</span>
               <span style={{ fontWeight: '600' }}>File selected: {paymentScreenshot.name}</span>
             </div>
             <div style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '0.25rem' }}>
@@ -401,7 +385,7 @@ function App() {
       </div>
 
       <div className="info-box">
-        <span className="info-box-icon">ℹ️</span>
+        <span className="info-box-icon">??</span>
         <div className="info-box-content">
           <p className="info-box-title">Important Notice</p>
           <p className="info-box-text">
@@ -422,14 +406,8 @@ function App() {
         {/* Form Card */}
         <div className="form-container">
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Sign up</h1>
-            <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>
-              Already a Member?{' '}
-              <span style={{ color: '#c4b5fd', fontWeight: '600', cursor: 'pointer' }}>
-                Sign in
-              </span>
-            </p>
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937' }}>Event Registration</h1>
           </div>
 
           {/* Step Indicator */}
@@ -439,7 +417,7 @@ function App() {
           {message.text && (
             <div className={message.type === 'success' ? 'alert-success' : 'alert-error'}>
               <span style={{ fontSize: '1.25rem' }}>
-                {message.type === 'success' ? '✅' : '❌'}
+                {message.type === 'success' ? '?' : '?'}
               </span>
               <span style={{ fontWeight: '500' }}>{message.text}</span>
             </div>
@@ -466,7 +444,7 @@ function App() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="orange-button"
+                className="lavender-button"
                 style={{ marginLeft: 'auto' }}
               >
                 Save & Continue
@@ -476,7 +454,7 @@ function App() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="orange-button"
+                className="lavender-button"
                 style={{ marginLeft: 'auto' }}
               >
                 {loading ? (

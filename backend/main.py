@@ -29,22 +29,26 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Event Ticket System",
-    description="Backend API for event registration and ticket management - Phase 2 (Cloudinary Storage)",
+    description="Backend API for event registration and ticket management",
     version="2.1.0",
     lifespan=lifespan
 )
 
 # CORS configuration - Allow both local and hosted origins
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]')
+CORS_ORIGINS = os.getenv(
+    "CORS_ORIGINS", 
+    '["http://localhost:5000", "http://localhost:5001", "https://event-ticketing-system-uwpc.vercel.app", "https://event-ticketing-system-nine.vercel.app"]'
+)
 import json
 cors_origins = json.loads(CORS_ORIGINS) if isinstance(CORS_ORIGINS, str) else CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
+    allow_origins=["*"] if "*" in str(cors_origins) else cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
