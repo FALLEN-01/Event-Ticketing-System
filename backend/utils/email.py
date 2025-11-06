@@ -13,11 +13,12 @@ import tempfile
 
 # Email configuration from environment
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_PORT = int(os.getenv("SMTP_PORT", 465))  # Changed default to 465 (SSL)
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
 FROM_NAME = os.getenv("FROM_NAME", "Event Ticket System")
+USE_TLS = os.getenv("USE_TLS", "False").lower() == "true"  # TLS for port 587
 
 
 async def send_email_with_attachments(
@@ -98,21 +99,37 @@ async def send_email_with_attachments(
                                 part.add_header('Content-Disposition', f'attachment; filename={filename}')
                                 message.attach(part)
         
-        # Send email
-        await aiosmtplib.send(
-            message,
-            hostname=SMTP_HOST,
-            port=SMTP_PORT,
-            username=SMTP_USER,
-            password=SMTP_PASSWORD,
-            start_tls=True
-        )
+        # Send email with appropriate connection method
+        if USE_TLS and SMTP_PORT == 587:
+            # Use STARTTLS for port 587
+            await aiosmtplib.send(
+                message,
+                hostname=SMTP_HOST,
+                port=SMTP_PORT,
+                username=SMTP_USER,
+                password=SMTP_PASSWORD,
+                start_tls=True,
+                timeout=30
+            )
+        else:
+            # Use SSL for port 465 or other ports
+            await aiosmtplib.send(
+                message,
+                hostname=SMTP_HOST,
+                port=SMTP_PORT,
+                username=SMTP_USER,
+                password=SMTP_PASSWORD,
+                use_tls=True,
+                timeout=30
+            )
         
         print(f"✅ Email sent successfully to {to_email}")
         return True
         
     except Exception as e:
         print(f"❌ Error sending email to {to_email}: {str(e)}")
+        print(f"   SMTP Config: {SMTP_HOST}:{SMTP_PORT}, TLS={USE_TLS}")
+        return False
         return False
 
 
