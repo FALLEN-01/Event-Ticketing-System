@@ -167,10 +167,11 @@ async def test_database_connection():
     """
     try:
         from database import SessionLocal
+        from sqlalchemy import text
         db = SessionLocal()
         
-        # Try a simple query
-        result = db.execute("SELECT 1").fetchone()
+        # Try a simple query using SQLAlchemy 2.0 syntax
+        result = db.execute(text("SELECT 1")).fetchone()
         db.close()
         
         return {
