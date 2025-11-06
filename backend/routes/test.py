@@ -1,6 +1,11 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Form
 from typing import Optional
 from utils.storage import upload_payment_screenshot, upload_qr_code
+from utils.email import (
+    send_approval_email, 
+    send_rejection_email, 
+    send_pending_confirmation_email
+)
 import os
 from datetime import datetime
 
@@ -212,3 +217,117 @@ async def test_environment_variables():
         "variables": results,
         "message": "✅ All environment variables are set!" if all_set else "⚠️ Some environment variables are missing. Check your .env file."
     }
+
+
+@router.post("/send-test-email")
+async def test_send_email(
+    email: str = Form(...),
+    email_type: str = Form("approval")
+):
+    """
+    Test endpoint to send various email templates
+    
+    Args:
+        email: Recipient email address
+        email_type: Type of email to send (approval, rejection, pending)
+    
+    Returns:
+        Success/failure message
+    """
+    try:
+        # Validate email
+        if '@' not in email:
+            raise HTTPException(status_code=400, detail="Invalid email format")
+        
+        # Check SMTP configuration
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+        
+        if not smtp_user or not smtp_password:
+            raise HTTPException(
+                status_code=500,
+                detail="SMTP credentials not configured. Set SMTP_USER and SMTP_PASSWORD in environment variables."
+            )
+        
+        # Send appropriate email based on type
+        if email_type == "approval":
+            success = await send_approval_email(
+                to_email=email,
+                name="Test User",
+                serial_code="EVT25-TEST001",
+                qr_code_path=None,  # No actual QR for test
+                team_name=None
+            )
+            message_type = "Approval email (with ticket)"
+            
+        elif email_type == "rejection":
+            success = await send_rejection_email(
+                to_email=email,
+                name="Test User",
+                reason="Payment screenshot was unclear. Please resubmit with a clearer image."
+            )
+            message_type = "Rejection email"
+            
+        elif email_type == "pending":
+            success = await send_pending_confirmation_email(
+                to_email=email,
+                name="Test User",
+                serial_code="EVT25-TEST001"
+            )
+            message_type = "Pending confirmation email"
+            
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid email_type. Use: approval, rejection, or pending"
+            )
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"✅ {message_type} sent successfully to {email}!",
+                "email_type": email_type,
+                "recipient": email,
+                "smtp_user": smtp_user,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to send {message_type}. Check backend logs for details."
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Email test failed: {str(e)}"
+        )
+
+
+@router.get("/smtp-config")
+async def test_smtp_config():
+    """
+    Test endpoint to check if SMTP/Email is configured
+    (Does not expose secrets, only checks if they exist)
+    """
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    from_email = os.getenv("FROM_EMAIL")
+    from_name = os.getenv("FROM_NAME")
+    
+    return {
+        "smtp_configured": bool(smtp_user and smtp_password),
+        "smtp_host": smtp_host or "smtp.gmail.com (default)",
+        "smtp_port": smtp_port or "587 (default)",
+        "smtp_user_set": bool(smtp_user),
+        "smtp_password_set": bool(smtp_password),
+        "smtp_user": smtp_user if smtp_user else "NOT SET",
+        "from_email": from_email or smtp_user or "NOT SET",
+        "from_name": from_name or "Event Registration System (default)",
+        "message": "✅ SMTP is properly configured!" if (smtp_user and smtp_password) else "❌ SMTP configuration incomplete. Set SMTP_USER and SMTP_PASSWORD in environment variables."
+    }
+
