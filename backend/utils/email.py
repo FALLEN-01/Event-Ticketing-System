@@ -12,13 +12,14 @@ import tempfile
 
 
 # Email configuration from environment
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 465))  # Changed default to 465 (SSL)
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp-relay.brevo.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
-FROM_NAME = os.getenv("FROM_NAME", "Event Ticket System")
-USE_TLS = os.getenv("USE_TLS", "False").lower() == "true"  # TLS for port 587
+FROM_NAME = os.getenv("FROM_NAME", "Event Registration System")
+USE_TLS = os.getenv("USE_TLS", "True").lower() == "true"
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 
 
 async def send_email_with_attachments(
