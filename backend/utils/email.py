@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Optional
 import httpx
 import tempfile
+import base64
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 
 # Email configuration from environment
@@ -29,8 +32,8 @@ async def send_email_with_attachments(
     attachments: Optional[list] = None
 ) -> bool:
     """
-    Send an email with optional attachments
-    Handles both local file paths and URLs (Supabase Storage)
+    Send an email with optional attachments using Brevo API
+    Falls back to SMTP if Brevo API key is not configured
     
     Args:
         to_email: Recipient email address
@@ -40,6 +43,93 @@ async def send_email_with_attachments(
     
     Returns:
         bool: True if email sent successfully, False otherwise
+    """
+    # Try Brevo API first (works on Render)
+    if BREVO_API_KEY:
+        try:
+            return await send_via_brevo_api(to_email, subject, html_body, attachments)
+        except Exception as e:
+            print(f"⚠️ Brevo API failed, trying SMTP fallback: {str(e)}")
+    
+    # Fallback to SMTP (for local development)
+    return await send_via_smtp(to_email, subject, html_body, attachments)
+
+
+async def send_via_brevo_api(
+    to_email: str,
+    subject: str,
+    html_body: str,
+    attachments: Optional[list] = None
+) -> bool:
+    """Send email using Brevo API (works on Render)"""
+    try:
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = BREVO_API_KEY
+        
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
+        # Prepare email
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=[{"email": to_email}],
+            sender={"name": FROM_NAME, "email": FROM_EMAIL},
+            subject=subject,
+            html_content=html_body
+        )
+        
+        # Handle attachments
+        if attachments:
+            attachment_list = []
+            for file_source in attachments:
+                try:
+                    # Check if it's a URL or local file
+                    if file_source.startswith(('http://', 'https://')):
+                        # Download from URL
+                        async with httpx.AsyncClient() as client:
+                            response = await client.get(file_source)
+                            if response.status_code == 200:
+                                filename = file_source.split('/')[-1]
+                                file_content = base64.b64encode(response.content).decode()
+                                attachment_list.append({
+                                    "name": filename,
+                                    "content": file_content
+                                })
+                    else:
+                        # Local file
+                        if os.path.exists(file_source):
+                            filename = os.path.basename(file_source)
+                            with open(file_source, 'rb') as f:
+                                file_content = base64.b64encode(f.read()).decode()
+                                attachment_list.append({
+                                    "name": filename,
+                                    "content": file_content
+                                })
+                except Exception as e:
+                    print(f"⚠️ Failed to attach {file_source}: {str(e)}")
+            
+            if attachment_list:
+                send_smtp_email.attachment = attachment_list
+        
+        # Send email
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print(f"✅ Email sent via Brevo API to {to_email} (Message ID: {api_response.message_id})")
+        return True
+        
+    except ApiException as e:
+        print(f"❌ Brevo API error: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Error sending via Brevo API: {str(e)}")
+        return False
+
+
+async def send_via_smtp(
+    to_email: str,
+    subject: str,
+    html_body: str,
+    attachments: Optional[list] = None
+) -> bool:
+    """
+    Send email via SMTP (fallback for local development)
     """
     if not SMTP_USER or not SMTP_PASSWORD:
         print("ERROR: SMTP credentials not configured in environment variables")

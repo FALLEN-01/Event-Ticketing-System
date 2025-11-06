@@ -22,7 +22,8 @@ email-validator>=2.0.0
 python-dotenv>=1.0.1
 
 # Email
- aiosmtplib>=3.0.2
+aiosmtplib>=3.0.2
+sib-api-v3-sdk>=7.6.0
 
 # QR Code generation
 qrcode[pil]>=8.0
