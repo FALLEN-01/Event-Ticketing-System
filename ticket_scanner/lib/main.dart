@@ -172,24 +172,24 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 child: Container(
                   width: 280,
                   height: 280,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: MobileScanner(
-                    controller: controller,
-                    onDetect: (capture) {
-                      final List<Barcode> barcodes = capture.barcodes;
-                      for (final barcode in barcodes) {
-                        if (barcode.rawValue != null && !isProcessing) {
-                          verifyTicket(barcode.rawValue!);
-                          break;
-                        }
-                      }
-                    },
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white, width: 3),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: MobileScanner(
+                      controller: controller,
+                      onDetect: (capture) {
+                        final List<Barcode> barcodes = capture.barcodes;
+                        for (final barcode in barcodes) {
+                          if (barcode.rawValue != null && !isProcessing) {
+                            verifyTicket(barcode.rawValue!);
+                            break;
+                          }
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
