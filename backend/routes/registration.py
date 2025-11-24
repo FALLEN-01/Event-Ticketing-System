@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 import os
-from pathlib import Path
-import uuid
 
 from database import get_db
 from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType

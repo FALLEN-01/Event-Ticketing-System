@@ -5,10 +5,8 @@ from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
 from email import encoders
 import os
-from pathlib import Path
 from typing import Optional
 import httpx
-import tempfile
 import base64
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
