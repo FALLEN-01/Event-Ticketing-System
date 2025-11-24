@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.eventticket.ticket_scanner"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion  // Commented out to avoid NDK issues
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
