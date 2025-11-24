@@ -150,25 +150,28 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
       body: Container(
         color: Colors.black,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text(
-                'Position QR code inside the square',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
+                  'Position QR code inside the square',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-            Center(
-              child: Container(
-                width: 300,
-                height: 300,
+              const SizedBox(height: 20),
+              Center(
+                child: Container(
+                  width: 280,
+                  height: 280,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white, width: 3),
                   borderRadius: BorderRadius.circular(12),
@@ -187,43 +190,45 @@ class _ScannerScreenState extends State<ScannerScreen> {
                       }
                     },
                   ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: _showManualEntryDialog,
-              icon: const Icon(Icons.keyboard),
-              label: const Text('Enter Serial Manually'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _showManualEntryDialog,
+                icon: const Icon(Icons.keyboard, size: 20),
+                label: const Text('Enter Serial Manually'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: () => controller.toggleTorch(),
-              icon: const Icon(Icons.flash_on),
-              label: const Text('Toggle Flash'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () => controller.toggleTorch(),
+                icon: const Icon(Icons.flash_on, size: 20),
+                label: const Text('Toggle Flash'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
               ),
-            ),
-            if (isProcessing)
-              const Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-          ],
+              if (isProcessing)
+                const Padding(
+                  padding: EdgeInsets.only(top: 20, bottom: 20),
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
