@@ -157,8 +157,8 @@ async def upload_qr_code(
             db.add(settings)
         
         # Update QR URL in database
-        qr_url = upload_result[\"secure_url\"]
-        if qr_type == \"individual\":
+        qr_url = upload_result["secure_url"]
+        if qr_type == "individual":
             settings.individual_qr_code = qr_url
         else:
             settings.bulk_qr_code = qr_url
@@ -171,12 +171,12 @@ async def upload_qr_code(
             admin_id=1,  # TODO: Get from JWT token
             action=AuditAction.UPLOAD_QR,
             details={
-                \"qr_type\": qr_type,
-                \"filename\": file.filename,
-                \"url\": qr_url
+                "qr_type": qr_type,
+                "filename": file.filename,
+                "url": qr_url
             },
             ip_address=request.client.host if request and request.client else None,
-            user_agent=request.headers.get(\"user-agent\", None) if request else None
+            user_agent=request.headers.get("user-agent", None) if request else None
         )
         db.refresh(settings)
         

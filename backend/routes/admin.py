@@ -245,7 +245,6 @@ async def get_registration_detail(
         "updated_at": registration.updated_at.isoformat(),
         "payment": {
             "status": payment.status.value if payment else "pending",
-            "payment_type": payment.payment_type.value if payment else "individual",
             "payment_screenshot": payment.payment_screenshot if payment else None,
             "amount": payment.amount if payment else None,
             "payment_method": payment.payment_method if payment else None,

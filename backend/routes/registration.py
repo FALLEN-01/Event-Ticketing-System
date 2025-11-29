@@ -110,11 +110,10 @@ async def register(
         db.add(new_registration)
         db.flush()  # Get the registration ID
         
-        # 2. Create payment record
+        # 2. Create payment record (payment_type removed - it's in Registration)
         new_payment = Payment(
             registration_id=new_registration.id,
             payment_screenshot=file_url,
-            payment_type=PaymentType.BULK if payment_type == "bulk" else PaymentType.INDIVIDUAL,
             status=PaymentStatus.PENDING,
             amount=float(amount) if amount else None,
             payment_method=payment_method if payment_method else None
