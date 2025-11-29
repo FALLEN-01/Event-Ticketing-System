@@ -1,8 +1,63 @@
 import { Ticket, Search, Filter, Download, XCircle, Send } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axiosInstance from '../config'
 
 function TicketsManagement() {
   const [filterType, setFilterType] = useState('all')
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchTickets()
+  }, [])
+
+  const fetchTickets = async () => {
+    try {
+      const response = await axiosInstance.get('/admin/registrations')
+      // Extract all tickets from registrations
+      const allTickets = []
+      response.data.registrations.forEach(reg => {
+        if (reg.status === 'approved' && reg.tickets_count > 0) {
+          // We'll need to fetch individual registration details to get tickets
+          fetchRegistrationTickets(reg.id)
+        }
+      })
+    } catch (error) {
+      console.error('Failed to fetch tickets:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchRegistrationTickets = async (regId) => {
+    try {
+      const response = await axiosInstance.get(`/admin/registrations/${regId}`)
+      if (response.data.tickets) {
+        setTickets(prev => [...prev, ...response.data.tickets.map(t => ({
+          ...t,
+          registration: response.data
+        }))])
+      }
+    } catch (error) {
+      console.error('Failed to fetch registration tickets:', error)
+    }
+  }
+
+  const filteredTickets = tickets.filter(ticket => {
+    if (filterType !== 'all') {
+      if (filterType === 'individual' && ticket.registration.payment_type !== 'individual') return false
+      if (filterType === 'bulk' && ticket.registration.payment_type !== 'bulk') return false
+      if (filterType === 'active' && !ticket.is_active) return false
+      if (filterType === 'invalid' && ticket.is_active) return false
+    }
+    if (searchTerm) {
+      return ticket.serial_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             ticket.member_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             ticket.registration.email.toLowerCase().includes(searchTerm.toLowerCase())
+    }
+    return true
+  })
 
   return (
     <div className="space-y-6">
@@ -21,6 +76,8 @@ function TicketsManagement() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
             <input 
               type="text" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by ticket ID, name, or email..." 
               className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50"
             />
@@ -57,11 +114,57 @@ function TicketsManagement() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-white/10">
-                <td colSpan="7" className="p-8 text-center text-white/60">
-                  No tickets issued yet
-                </td>
-              </tr>
+              {loading ? (
+                <tr className="border-t border-white/10">
+                  <td colSpan="7" className="p-8 text-center text-white/60">
+                    Loading tickets...
+                  </td>
+                </tr>
+              ) : filteredTickets.length === 0 ? (
+                <tr className="border-t border-white/10">
+                  <td colSpan="7" className="p-8 text-center text-white/60">
+                    No tickets found
+                  </td>
+                </tr>
+              ) : (
+                filteredTickets.map((ticket) => (
+                  <tr key={ticket.id} className="border-t border-white/10 hover:bg-white/5">
+                    <td className="p-4 text-white">{ticket.serial_code}</td>
+                    <td className="p-4 text-white">{ticket.member_name}</td>
+                    <td className="p-4 text-white/70">{ticket.registration.email}</td>
+                    <td className="p-4 text-white/70 capitalize">{ticket.registration.payment_type}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        ticket.is_active ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                      }`}>
+                        {ticket.is_active ? 'Active' : 'Invalid'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      {ticket.qr_code_path && (
+                        <a 
+                          href={ticket.qr_code_path} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-300 hover:text-blue-200 text-xs"
+                        >
+                          View QR
+                        </a>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <button className="p-1.5 hover:bg-white/10 rounded text-blue-300">
+                          <Send size={16} />
+                        </button>
+                        <button className="p-1.5 hover:bg-white/10 rounded text-red-300">
+                          <XCircle size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

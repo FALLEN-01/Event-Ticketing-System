@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, X } from 'lucide-react'
-import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-// Configure axios to use credentials (cookies)
-axios.defaults.withCredentials = true
+import axiosInstance from '../config'
 
 function Auth() {
   const navigate = useNavigate()
@@ -74,20 +69,21 @@ function Auth() {
 
       // Login API call
       try {
-        const response = await axios.post(`${API_URL}/api/admin/login`, {
+        const response = await axiosInstance.post('/admin/login', {
           email: email.trim(),
           password: password,
-        }, {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          role: 'admin'
         })
         
         const data = response.data
         
-        // Token is stored in HTTP-only cookie by backend
-        // No need to store in localStorage
+        // Store token and user data
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token)
+        }
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
         
         showNotification('Login successful!', 'success')
         

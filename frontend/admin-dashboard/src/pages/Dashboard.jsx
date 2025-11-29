@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Calendar, Ticket, Users, User, ClipboardCheck, CreditCard, CheckCircle, Shield, Settings, FileText, LogOut, Bell } from 'lucide-react'
 import DashboardOverview from '../components/DashboardOverview'
 import EventsManagement from '../components/EventsManagement'
@@ -12,8 +13,20 @@ import SettingsPage from '../components/SettingsPage'
 import AuditLog from '../components/AuditLog'
 
 function Dashboard() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showNotifications, setShowNotifications] = useState(false)
+  
+  // Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
+    // Redirect to login
+    navigate('/auth')
+  }
   return (
     <div className="min-h-screen w-full relative">
       <div 
@@ -141,11 +154,21 @@ function Dashboard() {
             </div>
 
             <div className="space-y-1">
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all">
+              <button 
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "settings" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
                 <Settings size={18} className="flex-shrink-0" />
                 <span>Settings</span>
               </button>
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all"
+              >
                 <LogOut size={18} className="flex-shrink-0" />
                 <span>Logout</span>
               </button>
@@ -161,119 +184,22 @@ function Dashboard() {
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <User size={16} className="text-white" />
                 </div>
-                <span className="text-sm font-medium text-white">John</span>
+                <span className="text-sm font-medium text-white">{user.name || user.email || 'Admin'}</span>
               </button>
             </div>
           </header>
 
           <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'dashboard' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Dashboard Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">Total Events</p>
-                        <p className="text-3xl font-bold text-white mt-2">24</p>
-                      </div>
-                      <Calendar className="text-white/50" size={32} />
-                    </div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">Total Tickets</p>
-                        <p className="text-3xl font-bold text-white mt-2">1,248</p>
-                      </div>
-                      <Ticket className="text-white/50" size={32} />
-                    </div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">Participants</p>
-                        <p className="text-3xl font-bold text-white mt-2">892</p>
-                      </div>
-                      <Users className="text-white/50" size={32} />
-                    </div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/70 text-sm">Revenue</p>
-                        <p className="text-3xl font-bold text-white mt-2">$45K</p>
-                      </div>
-                      <CreditCard className="text-white/50" size={32} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {activeTab === 'events' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Events Management</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Events content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'tickets' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Tickets Management</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Tickets content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'participants' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Participants Management</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Participants content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'attendance' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Attendance Tracking</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Attendance content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'payments' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Payments & Revenue</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Payments content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'approvals' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Approvals</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Approvals content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'admins' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Admins & Roles</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Admin management content coming soon...</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'audit' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">Audit Log</h2>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <p className="text-white/70">Audit log content coming soon...</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'dashboard' && <DashboardOverview />}
+            {activeTab === 'events' && <EventsManagement />}
+            {activeTab === 'tickets' && <TicketsManagement />}
+            {activeTab === 'participants' && <ParticipantsManagement />}
+            {activeTab === 'attendance' && <AttendanceTracking />}
+            {activeTab === 'payments' && <PaymentsVerification />}
+            {activeTab === 'approvals' && <Approvals />}
+            {activeTab === 'admins' && <AdminsRoles />}
+            {activeTab === 'settings' && <SettingsPage />}
+            {activeTab === 'audit' && <AuditLog />}
           </div>
         </main>
       </div>
