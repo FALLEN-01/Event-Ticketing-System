@@ -9,7 +9,7 @@ import Approvals from '../components/Approvals'
 import PaymentsVerification from '../components/PaymentsVerification'
 import AdminsRoles from '../components/AdminsRoles'
 import SettingsPage from '../components/SettingsPage'
-import AuditLog from '../components/AuditLog'
+import AuditLogs from '../components/AuditLogs'
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -186,7 +186,7 @@ function Dashboard() {
             {activeTab === 'approvals' && <Approvals />}
             {activeTab === 'admins' && <AdminsRoles />}
             {activeTab === 'settings' && <SettingsPage />}
-            {activeTab === 'audit' && <AuditLog />}
+            {activeTab === 'audit' && <AuditLogs />}
           </div>
         </main>
       </div>

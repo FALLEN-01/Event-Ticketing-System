@@ -53,8 +53,7 @@ async def register(
     members: Optional[str] = Form(None),
     payment_type: str = Form(...),  # "individual" or "bulk"
     payment_screenshot: UploadFile = File(...),
-    amount: Optional[str] = Form(None),
-    payment_method: Optional[str] = Form(None),
+    amount: str = Form(...),  # Mandatory amount
     db: Session = Depends(get_db)
 ):
     """
@@ -115,8 +114,8 @@ async def register(
             registration_id=new_registration.id,
             payment_screenshot=file_url,
             status=PaymentStatus.PENDING,
-            amount=float(amount) if amount else None,
-            payment_method=payment_method if payment_method else None
+            amount=float(amount),  # Mandatory amount
+            payment_method="UPI"  # Always UPI
         )
         db.add(new_payment)
         db.flush()

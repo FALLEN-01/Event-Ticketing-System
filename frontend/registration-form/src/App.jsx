@@ -165,6 +165,11 @@ function App() {
       submitData.append('phone', formData.phone)
       submitData.append('payment_type', paymentType)
       submitData.append('payment_screenshot', paymentScreenshot)
+      
+      // Add amount based on payment type
+      const amount = paymentType === 'bulk' ? settings.bulk_price : settings.individual_price
+      submitData.append('amount', amount.toString())
+      submitData.append('payment_method', 'UPI')
 
       if (paymentType === 'bulk') {
         submitData.append('team_name', formData.team_name)

@@ -677,17 +677,17 @@ async def send_approval_email(
     </html>
     """
     
-    # Encode QR code to base64 and embed inline
-    qr_base64 = None
+    # Use Cloudinary URL directly in img src (better for email clients)
+    qr_url = None
     if qr_code_path:
-        qr_base64 = await get_base64_image(qr_code_path)
+        qr_url = qr_code_path
     elif is_bulk and qr_code_paths and len(qr_code_paths) > 0:
         # Use first QR for preview in email body
-        qr_base64 = await get_base64_image(qr_code_paths[0])
+        qr_url = qr_code_paths[0]
     
-    # Replace placeholder with actual base64 QR code or fallback message
-    if qr_base64:
-        html_body = html_body.replace('QR_CODE_PLACEHOLDER', qr_base64)
+    # Replace placeholder with actual Cloudinary URL or fallback message
+    if qr_url:
+        html_body = html_body.replace('QR_CODE_PLACEHOLDER', qr_url)
     else:
         html_body = html_body.replace('<img src="QR_CODE_PLACEHOLDER"', '<div style="color: #666; font-size: 14px;">[QR Code will be attached]</div><img style="display:none;" src=""')
     

@@ -31,6 +31,15 @@ class LoginResponse(BaseModel):
     user: dict
 
 
+class PaymentDetail(BaseModel):
+    amount: Optional[float]
+    payment_method: Optional[str]
+    payment_screenshot: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
 class RegistrationSummary(BaseModel):
     id: int
     serial_code: str
@@ -41,7 +50,7 @@ class RegistrationSummary(BaseModel):
     members: Optional[str]
     status: str
     payment_type: str
-    payment_screenshot: Optional[str]
+    payment: Optional[PaymentDetail]
     tickets_count: int
     created_at: str
 
@@ -182,7 +191,11 @@ async def get_all_registrations(
                 members=reg.members,
                 status=payment.status.value,
                 payment_type=reg.payment_type.value,  # Use reg.payment_type, not payment.payment_type
-                payment_screenshot=payment.payment_screenshot,
+                payment=PaymentDetail(
+                    amount=float(payment.amount) if payment.amount else None,
+                    payment_method=payment.payment_method,
+                    payment_screenshot=payment.payment_screenshot
+                ),
                 tickets_count=db.query(Ticket).filter(Ticket.registration_id == reg.id).count(),
                 created_at=reg.created_at.isoformat()
             )
