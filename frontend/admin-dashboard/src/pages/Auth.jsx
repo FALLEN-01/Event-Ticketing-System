@@ -129,7 +129,7 @@ function Auth() {
           alt="Mountain landscape" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-linear-to-br from-white/80 via-purple-100/60 to-pink-100/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-purple-100/60 to-pink-100/60"></div>
       </div>
 
       {/* Notifications Container */}
@@ -139,18 +139,26 @@ function Auth() {
             key={notification.id}
             className={`flex items-center justify-between p-4 rounded-lg shadow-lg backdrop-blur-md transform transition-all duration-300 animate-slide-in-right ${
               notification.type === 'success' 
-                ? 'bg-white/90 text-green-900' 
+                ? 'bg-white/90 text-purple-900' 
                 : notification.type === 'error'
-                ? 'bg-white/90 text-red-900'
+                ? 'bg-white/90 text-pink-900'
                 : notification.type === 'warning'
-                ? 'bg-white/90 text-orange-900'
-                : 'bg-white/90 text-gray-900'
+                ? 'bg-white/90 text-purple-800'
+                : 'bg-white/90 text-purple-900'
             }`}
           >
             <p className="text-sm font-medium pr-4">{notification.message}</p>
             <button
               onClick={() => removeNotification(notification.id)}
-              className="shrink-0 text-gray-600 hover:text-gray-800"
+              className={`flex-shrink-0 transition-colors ${
+                notification.type === 'success'
+                  ? 'text-purple-600 hover:text-purple-800'
+                  : notification.type === 'error'
+                  ? 'text-pink-600 hover:text-pink-800'
+                  : notification.type === 'warning'
+                  ? 'text-purple-500 hover:text-purple-700'
+                  : 'text-purple-600 hover:text-purple-800'
+              }`}
             >
               <X size={16} />
             </button>
@@ -159,62 +167,17 @@ function Auth() {
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-10">
+      <div className="relative z-10 w-full max-w-md">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10" style={{boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'}}>
           {/* Title */}
-          <h1 className="text-3xl font-normal text-center mb-8 text-gray-900" style={{ fontFamily: 'serif' }}>
+          <h1 className="text-2xl font-light text-center mb-8 text-gray-900" style={{ fontFamily: 'serif' }}>
             Welcome Back!
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Login as Role Selector */}
-            <div>
-              <label className="block text-sm font-medium mb-2.5" style={{ color: '#374151' }}>
-                Login as
-              </label>
-              <div className="grid grid-cols-3 gap-1 p-1.5 rounded-xl" style={{ backgroundColor: '#f3f4f6' }}>
-                <button
-                  type="button"
-                  onClick={() => setRole('author')}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-all`}
-                  style={{
-                    backgroundColor: role === 'author' ? '#ffffff' : 'transparent',
-                    color: role === 'author' ? '#111827' : '#6b7280',
-                    boxShadow: role === 'author' ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none'
-                  }}
-                >
-                  Author
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('reviewer')}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-all`}
-                  style={{
-                    backgroundColor: role === 'reviewer' ? '#ffffff' : 'transparent',
-                    color: role === 'reviewer' ? '#111827' : '#6b7280',
-                    boxShadow: role === 'reviewer' ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none'
-                  }}
-                >
-                  Reviewer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('organizer')}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-all`}
-                  style={{
-                    backgroundColor: role === 'organizer' ? '#ffffff' : 'transparent',
-                    color: role === 'organizer' ? '#111827' : '#6b7280',
-                    boxShadow: role === 'organizer' ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none'
-                  }}
-                >
-                  Organizer
-                </button>
-              </div>
-            </div>
-
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Address */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+              <label htmlFor="email" className="block text-xs font-medium mb-2 text-gray-700">
                 Email Address
               </label>
               <input
@@ -224,18 +187,14 @@ function Auth() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="block w-full px-4 py-3 rounded-xl bg-white transition-all"
-                style={{
-                  border: '1px solid #d1d5db',
-                  color: '#111827'
-                }}
+                className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                 placeholder="Enter Email"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+              <label htmlFor="password" className="block text-xs font-medium mb-2 text-gray-700">
                 Password
               </label>
               <div className="relative">
@@ -246,39 +205,38 @@ function Auth() {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="block w-full px-4 py-3 pr-12 rounded-xl bg-white transition-all"
-                  style={{
-                    border: '1px solid #d1d5db',
-                    color: '#111827'
-                  }}
+                  className="block w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg bg-white placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                   placeholder="Enter your password"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors"
-                  style={{ color: '#9ca3af' }}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3.5 px-4 mt-2 text-base font-medium rounded-xl text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2 inline-block"></div>
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                    Signing In...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>

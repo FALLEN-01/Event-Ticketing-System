@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { FileText, CheckCircle, User, Settings, LogOut, Bell, Calendar } from 'lucide-react'
+import { LayoutDashboard, Calendar, Ticket, Users, ClipboardCheck, CreditCard, CheckCircle, Shield, Settings, FileText, LogOut, Bell } from 'lucide-react'
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -20,67 +20,127 @@ function Dashboard() {
 
       <div className="relative z-10 flex min-h-screen">
         <aside className="hidden md:flex md:flex-col w-64 h-screen bg-white/10 backdrop-blur-md sticky left-0 top-0">
-          <div className="h-16 px-4 flex items-center shrink-0 border-b border-white/10" style={{ marginBottom: '20px' }}>
+          <div className="h-16 px-4 flex items-center flex-shrink-0">
             <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold text-white">Dashboard</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg transform rotate-12" />
+              <span className="text-lg font-semibold text-white truncate">Event Ticketing</span>
             </div>
           </div>
 
-          <nav className="flex-1 p-6">
-            <div>
+          <nav className="flex-1 p-4 flex flex-col justify-between">
+            <div className="space-y-1">
               <button 
                 onClick={() => setActiveTab("dashboard")}
-                style={{ marginBottom: '20px', paddingLeft: '32px' }}
-                className={`w-full flex items-center gap-4 pr-6 py-5 rounded-xl transition-all ${activeTab === "dashboard" ? "text-white" : "text-white/70 hover:text-white"}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "dashboard" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <FileText size={22} className="shrink-0" />
-                <span>Home</span>
+                <LayoutDashboard size={18} className="flex-shrink-0" />
+                <span>Dashboard</span>
               </button>
               <button 
                 onClick={() => setActiveTab("events")}
-                style={{ marginBottom: '20px', paddingLeft: '32px' }}
-                className={`w-full flex items-center gap-4 pr-6 py-5 rounded-xl transition-all ${activeTab === "events" ? "text-white" : "text-white/70 hover:text-white"}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "events" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <Calendar size={22} className="shrink-0" />
+                <Calendar size={18} className="flex-shrink-0" />
                 <span>Events</span>
               </button>
               <button 
                 onClick={() => setActiveTab("tickets")}
-                style={{ marginBottom: '20px', paddingLeft: '32px' }}
-                className={`w-full flex items-center gap-4 pr-6 py-5 rounded-xl transition-all ${activeTab === "tickets" ? "text-white" : "text-white/70 hover:text-white"}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "tickets" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <FileText size={22} className="shrink-0" />
+                <Ticket size={18} className="flex-shrink-0" />
                 <span>Tickets</span>
               </button>
               <button 
                 onClick={() => setActiveTab("participants")}
-                style={{ marginBottom: '20px', paddingLeft: '32px' }}
-                className={`w-full flex items-center gap-4 pr-6 py-5 rounded-xl transition-all ${activeTab === "participants" ? "text-white" : "text-white/70 hover:text-white"}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "participants" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <User size={22} className="shrink-0" />
+                <Users size={18} className="flex-shrink-0" />
                 <span>Participants</span>
               </button>
               <button 
-                onClick={() => setActiveTab("approvals")}
-                style={{ marginBottom: '20px', paddingLeft: '32px' }}
-                className={`w-full flex items-center gap-4 pr-6 py-5 rounded-xl transition-all ${activeTab === "approvals" ? "text-white" : "text-white/70 hover:text-white"}`}
+                onClick={() => setActiveTab("attendance")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "attendance" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
               >
-                <CheckCircle size={22} className="shrink-0" />
+                <ClipboardCheck size={18} className="flex-shrink-0" />
+                <span>Attendance</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("payments")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "payments" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <CreditCard size={18} className="flex-shrink-0" />
+                <span>Payments</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("approvals")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "approvals" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <CheckCircle size={18} className="flex-shrink-0" />
                 <span>Approvals</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("admins")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "admins" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Shield size={18} className="flex-shrink-0" />
+                <span>Admins / Roles</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("audit")}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  activeTab === "audit" 
+                    ? "bg-white/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <FileText size={18} className="flex-shrink-0" />
+                <span>Audit Log</span>
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all">
+                <Settings size={18} className="flex-shrink-0" />
+                <span>Settings</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all">
+                <LogOut size={18} className="flex-shrink-0" />
+                <span>Logout</span>
               </button>
             </div>
           </nav>
-
-          <div className="p-6 shrink-0">
-            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all text-left">
-              <Settings size={22} className="shrink-0" />
-              <span>Settings</span>
-            </button>
-            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all text-left">
-              <LogOut size={22} className="shrink-0" />
-              <span>Logout</span>
-            </button>
-          </div>
         </aside>
 
         <main className="flex-1 flex flex-col min-h-screen">
@@ -97,6 +157,113 @@ function Dashboard() {
           </header>
 
           <div className="flex-1 overflow-y-auto p-6">
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Dashboard Overview</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">Total Events</p>
+                        <p className="text-3xl font-bold text-white mt-2">24</p>
+                      </div>
+                      <Calendar className="text-white/50" size={32} />
+                    </div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">Total Tickets</p>
+                        <p className="text-3xl font-bold text-white mt-2">1,248</p>
+                      </div>
+                      <Ticket className="text-white/50" size={32} />
+                    </div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">Participants</p>
+                        <p className="text-3xl font-bold text-white mt-2">892</p>
+                      </div>
+                      <Users className="text-white/50" size={32} />
+                    </div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm">Revenue</p>
+                        <p className="text-3xl font-bold text-white mt-2">$45K</p>
+                      </div>
+                      <CreditCard className="text-white/50" size={32} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'events' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Events Management</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Events content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'tickets' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Tickets Management</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Tickets content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'participants' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Participants Management</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Participants content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'attendance' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Attendance Tracking</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Attendance content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'payments' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Payments & Revenue</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Payments content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'approvals' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Approvals</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Approvals content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'admins' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Admins & Roles</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Admin management content coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'audit' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-white">Audit Log</h2>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <p className="text-white/70">Audit log content coming soon...</p>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
