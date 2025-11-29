@@ -364,7 +364,7 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
           <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', border: '3px solid #c4b5fd' }}>
             <img 
-              src={`${API_ENDPOINTS.BASE_URL}/admin/settings/qr/${paymentType === 'bulk' ? 'bulk' : 'individual'}`}
+              src={`${API_ENDPOINTS.BASE_URL}/api/payment-qr/${paymentType === 'bulk' ? 'bulk' : 'individual'}`}
               alt={`${paymentType === 'bulk' ? 'Bulk/Team' : 'Individual'} Payment QR Code`}
               style={{ width: '250px', height: '250px', display: 'block', objectFit: 'contain' }}
               onError={(e) => {

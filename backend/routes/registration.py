@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 import os
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import httpx
+from io import BytesIO
 
 from database import get_db
 from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType
+from models.settings import Settings
 from utils.email import send_pending_confirmation_email
 from utils.storage import upload_payment_screenshot
 import json
@@ -315,3 +319,53 @@ async def check_registration_status(email: str, db: Session = Depends(get_db)):
         "ticket_serials": ticket_serials,
         "created_at": registration.created_at.isoformat()
     }
+
+
+@router.get("/payment-qr/{qr_type}")
+@limiter.limit("20/minute")
+async def get_payment_qr_code(
+    request: Request,
+    qr_type: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Public endpoint to get payment QR code (individual or bulk)
+    Used by registration form to display payment QR codes
+    """
+    if qr_type not in ["individual", "bulk"]:
+        raise HTTPException(status_code=400, detail="Invalid QR type. Use 'individual' or 'bulk'")
+    
+    settings = db.query(Settings).first()
+    if not settings:
+        raise HTTPException(status_code=404, detail="Settings not configured")
+    
+    # Get QR URL from database
+    qr_url = settings.individual_qr_code if qr_type == "individual" else settings.bulk_qr_code
+    
+    if not qr_url:
+        raise HTTPException(status_code=404, detail=f"{qr_type.capitalize()} QR code not uploaded yet")
+    
+    try:
+        # Fetch image from Cloudinary
+        async with httpx.AsyncClient() as client:
+            response = await client.get(qr_url)
+            response.raise_for_status()
+            
+            # Determine content type from Cloudinary URL
+            content_type = "image/png"
+            if ".jpg" in qr_url or ".jpeg" in qr_url:
+                content_type = "image/jpeg"
+            elif ".svg" in qr_url:
+                content_type = "image/svg+xml"
+            
+            return StreamingResponse(
+                BytesIO(response.content),
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=3600",
+                    "Content-Disposition": f"inline; filename={qr_type}_payment_qr.png"
+                }
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch QR code: {str(e)}")

@@ -196,7 +196,7 @@ async def get_qr_code(
     db: Session = Depends(get_db)
 ):
     """
-    Get QR code image (individual or bulk)
+    Get QR code image (individual or bulk) - Admin only
     """
     if qr_type not in ["individual", "bulk"]:
         raise HTTPException(status_code=400, detail="Invalid QR type. Use 'individual' or 'bulk'")
