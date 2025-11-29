@@ -1,8 +1,6 @@
-# 🎫 Event Ticket System
+# 🎫 Event Ticketing System
 
-A complete event registration and ticket management system with web and mobile interfaces.
-
----
+A complete event registration and ticket management system with admin dashboard, public registration form, and mobile ticket scanner.
 
 ## 📋 **Table of Contents**
 
@@ -10,29 +8,30 @@ A complete event registration and ticket management system with web and mobile i
 - [Tech Stack](#️-tech-stack)
 - [Project Structure](#️-project-structure)
 - [Quick Start with Docker](#-quick-start-with-docker)
-- [Installation](#-installation)
+- [Manual Installation](#-manual-installation)
+- [Environment Variables](#-environment-variables)
 - [Running the Application](#-running-the-application)
 - [API Documentation](#-api-documentation)
-- [Development Phases](#-development-phases)
-- [Environment Variables](#-environment-variables)
 - [Component Documentation](#-component-documentation)
 - [Deployment](#-deployment)
-- [Contributing](#-contributing)
 
 ---
 
 ## ✨ **Features**
 
-- 🎟️ **Event Registration** - User-friendly form for event sign-ups
-- 💳 **Payment Integration** - Upload payment screenshots (Phase 2)
-- ☁️ **Cloud Storage** - Cloudinary for secure file uploads
-- ✅ **Admin Approval System** - Review and approve/reject registrations
-- 📧 **Email Tickets** - Automatic ticket delivery via email (Phase 4)
+### ✅ Implemented Features
+- 🎟️ **Event Registration** - Multi-step form with individual/bulk registration
+- 💳 **Payment Upload** - Screenshot upload with validation (JPG, PNG, WebP)
+- ☁️ **Cloud Storage** - Supabase Storage for payment screenshots
+- ✅ **Admin Dashboard** - 10-section dashboard with glassmorphic UI
+- 🔐 **JWT Authentication** - Secure admin login with HTTP-only cookies
+- 📊 **Real-time Statistics** - Registration counts and status tracking
+- 👥 **Approval System** - Approve/reject registrations with reasons
+- 🎫 **Ticket Management** - View and manage issued tickets
+- 📧 **Email Notifications** - Confirmation and approval emails
 - 🔲 **QR Code Generation** - Unique QR codes for each ticket
-- 📱 **Mobile Scanner** - Flutter app for ticket verification
-- 📊 **Dashboard Analytics** - View registration statistics
-- 🔒 **Secure Authentication** - Admin-only access control
-- 🐳 **Docker Support** - Easy deployment with Docker Compose
+- 📱 **Mobile Scanner** - Flutter app for ticket verification (in progress)
+- 🐳 **Docker Support** - Complete containerization with docker-compose
 
 ---
 
@@ -40,91 +39,218 @@ A complete event registration and ticket management system with web and mobile i
 
 The fastest way to run the entire application:
 
+### Prerequisites
+- Docker & Docker Compose installed
+- `.env` files configured in each directory (see Environment Variables section)
+
+### Steps
+
+1. **Clone the repository:**
 ```bash
-# Clone the repository
 git clone https://github.com/FALLEN-01/Event-Ticketing-System.git
 cd Event-Ticketing-System
-
-# Start all services with Docker Compose
-docker-compose up -d --build
-
-# Access the applications:
-# - Registration Form: http://localhost:5000
-# - Admin Dashboard: http://localhost:5001
-# - Backend API: http://localhost:8000
-# - API Docs: http://localhost:8000/docs
 ```
 
-📚 **For detailed Docker instructions, see [DOCKER.md](./DOCKER.md)**
+2. **Create `.env` files:**
+```bash
+# Backend
+cp backend/.env.example backend/.env
+
+# Registration Form
+cp frontend/registration-form/.env.example frontend/registration-form/.env
+
+# Admin Dashboard
+cp frontend/admin-dashboard/.env.example frontend/admin-dashboard/.env
+```
+
+3. **Configure environment variables** (see [Environment Variables](#-environment-variables) section)
+
+4. **Start all services:**
+```bash
+docker-compose up -d --build
+```
+
+5. **Initialize database** (first time only):
+```bash
+docker exec -it event-backend python create_tables.py
+```
+
+6. **Access the applications:**
+- **Registration Form:** http://localhost:5000
+- **Admin Dashboard:** http://localhost:5001
+- **Backend API:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
+
+7. **Stop all services:**
+```bash
+docker-compose down
+```
+
+8. **View logs:**
+```bash
+docker-compose logs -f
+# Or specific service:
+docker-compose logs -f backend
+```
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-event-ticket-system/
+Event-Ticketing-System/
 │
-├── backend/                              # FastAPI backend (core API + DB)
-│   ├── main.py                           # FastAPI application entry
-│   ├── database.py                       # Database configuration
-│   ├── routes/                           # API endpoints
-│   │   ├── registration.py               # User registration
-│   │   └── admin.py                      # Admin management
-│   ├── models/                           # Database models
-│   │   └── registration.py               # Registration model
-│   ├── utils/                            # Utilities
-│   │   ├── email.py                      # Email sending
-│   │   └── qr_generator.py               # QR code generation
-│   ├── static/uploads/                   # File uploads
-│   └── requirements.txt                  # Python dependencies
+├── backend/                              # FastAPI Backend
+│   ├── main.py                           # FastAPI app entry point
+│   ├── database.py                       # PostgreSQL/SQLite connection
+│   ├── create_tables.py                  # Database initialization
+│   ├── .env                              # Environment variables (create from .env.example)
+│   ├── requirements.txt                  # Python dependencies
+│   ├── Dockerfile                        # Backend container config
+│   │
+│   ├── models/
+│   │   └── registration.py               # SQLAlchemy models (Registration, Payment, Ticket, Admin)
+│   │
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── registration.py               # Public registration API
+│   │   ├── admin.py                      # Admin authentication & management
+│   │   ├── ticket.py                     # Ticket verification
+│   │   └── test.py                       # Test endpoints
+│   │
+│   ├── utils/
+│   │   ├── email.py                      # Email sending (SMTP)
+│   │   ├── qr_generator.py               # QR code generation
+│   │   └── storage.py                    # Supabase Storage upload
+│   │
+│   └── static/
+│       ├── qr_codes/                     # Generated QR codes
+│       └── uploads/                      # Temporary uploads
 │
-├── frontend/                             # React web applications
-│   ├── registration-form/                # Public registration form (Vite + React)
-│   └── admin-dashboard/                  # Admin panel (Vite + React)
+├── frontend/
+│   │
+│   ├── admin-dashboard/                  # Admin Panel (React + Vite + Tailwind v3)
+│   │   ├── src/
+│   │   │   ├── App.jsx                   # Main router
+│   │   │   ├── config.js                 # Axios instance with auth
+│   │   │   ├── pages/
+│   │   │   │   ├── Auth.jsx              # Login page
+│   │   │   │   └── Dashboard.jsx         # Main dashboard with sidebar
+│   │   │   └── components/
+│   │   │       ├── DashboardOverview.jsx # Stats & recent registrations
+│   │   │       ├── EventsManagement.jsx
+│   │   │       ├── TicketsManagement.jsx
+│   │   │       ├── ParticipantsManagement.jsx
+│   │   │       ├── AttendanceTracking.jsx
+│   │   │       ├── Approvals.jsx         # Two-pane approval interface
+│   │   │       ├── PaymentsVerification.jsx
+│   │   │       ├── AdminsRoles.jsx
+│   │   │       ├── SettingsPage.jsx
+│   │   │       ├── AuditLog.jsx
+│   │   │       └── ProtectedRoute.jsx    # Auth guard
+│   │   ├── .env                          # API URL config (create from .env.example)
+│   │   ├── package.json
+│   │   ├── postcss.config.cjs            # PostCSS for Tailwind v3
+│   │   ├── tailwind.config.js
+│   │   ├── Dockerfile
+│   │   └── nginx.conf                    # Nginx config for production
+│   │
+│   └── registration-form/                # Public Registration Form (React + Vite + CSS)
+│       ├── src/
+│       │   ├── App.jsx                   # Multi-step form (3 steps)
+│       │   ├── App.css                   # Custom CSS styling
+│       │   └── config.js                 # API endpoints
+│       ├── .env                          # API URL config (create from .env.example)
+│       ├── package.json
+│       ├── Dockerfile
+│       └── nginx.conf                    # Nginx config for production
 │
-└── ticket_scanner/                       # Mobile ticket scanner (Flutter)
-    └── lib/
+├── ticket_scanner/                       # Flutter Mobile Scanner
+│   ├── lib/
+│   │   └── main.dart                     # QR scanner implementation
+│   ├── pubspec.yaml                      # Flutter dependencies
+│   └── README.md
+│
+├── static/                               # Shared static files
+│   ├── qr_codes/
+│   └── uploads/
+│
+├── docker-compose.yml                    # Docker orchestration
+├── .gitignore
+├── LICENSE
+└── README.md                             # This file
 ```
 
 ---
 
-## 🛠️ **Installation**
+## 🛠️ **Manual Installation**
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-
 - **Python 3.10+** ([Download](https://www.python.org/downloads/))
 - **Node.js 18+** ([Download](https://nodejs.org/))
-- **npm** (comes with Node.js)
-- **Flutter SDK** (for mobile app) ([Install Guide](https://flutter.dev/docs/get-started/install))
+- **PostgreSQL** or **SQLite** (for database)
 - **Git** ([Download](https://git-scm.com/))
 
-### Step 1: Clone the Repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/event-ticket-system.git
-cd event-ticket-system
+git clone https://github.com/FALLEN-01/Event-Ticketing-System.git
+cd Event-Ticketing-System
 ```
 
-### Step 2: Backend Setup
+### 2. Backend Setup
 
 ```bash
 cd backend
 
-# Install Python dependencies (no venv needed if installing globally)
-py -m pip install -r requirements.txt
+# Install Python dependencies
+pip install -r requirements.txt
 
-# Create environment file
-copy .env.example .env
+# Create .env file from example
+cp .env.example .env  # Linux/Mac
+copy .env.example .env  # Windows
 
-# Edit .env with your configuration (SMTP, database, etc.)
-
-# Initialize database
-py -c "from database import init_db; init_db()"
+# Edit .env with your configuration
+# Required: DATABASE_URL, SUPABASE_URL, SUPABASE_KEY, SMTP settings
 ```
 
-### Step 3: Frontend Setup
+**Configure `.env` file:**
+```env
+# Database (PostgreSQL or SQLite)
+DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/event_tickets
+# OR for SQLite: DATABASE_URL=sqlite:///./event_tickets.db
+
+# Supabase Storage (for payment screenshots)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
+
+# SMTP Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=noreply@yourevent.com
+FROM_NAME=Event Ticketing System
+
+# JWT Authentication
+JWT_SECRET_KEY=your-secret-key-change-in-production
+JWT_ALGORITHM=HS256
+
+# CORS Origins
+CORS_ORIGINS=["http://localhost:5000","http://localhost:5173"]
+```
+
+**Initialize Database:**
+```bash
+python create_tables.py
+```
+
+This creates:
+- Admin user: `admin@gmail.com` / `admin123`
+- Database tables: registrations, payments, tickets, attendance, messages, admins
+
+### 3. Frontend Setup
 
 #### Registration Form
 
@@ -134,10 +260,15 @@ cd frontend/registration-form
 # Install dependencies
 npm install
 
-# Dependencies are already configured:
-# - axios (API calls)
-# - react-router-dom (routing)
-# - tailwindcss (styling)
+# Create .env file
+cp .env.example .env  # Linux/Mac
+copy .env.example .env  # Windows
+```
+
+**Configure `.env`:**
+```env
+# Backend API URL
+VITE_API_URL=http://localhost:8000
 ```
 
 #### Admin Dashboard
@@ -148,75 +279,75 @@ cd frontend/admin-dashboard
 # Install dependencies
 npm install
 
-# Dependencies are already configured:
-# - axios (API calls)
-# - react-router-dom (routing)
-# - tailwindcss (styling)
+# Create .env file
+cp .env.example .env  # Linux/Mac
+copy .env.example .env  # Windows
 ```
 
-### Step 4: Flutter App Setup (Optional)
+**Configure `.env`:**
+```env
+# Backend API URL (with /api suffix)
+VITE_API_URL=http://localhost:8000/api
+```
+
+### 4. Flutter Scanner Setup (Optional)
 
 ```bash
 cd ticket_scanner
 
-# Create Flutter project
-flutter create .
-
-# Install dependencies
+# Get Flutter dependencies
 flutter pub get
+
+# Run on connected device/emulator
+flutter run
 ```
 
 ---
 
 ## 🚀 **Running the Application**
 
-You'll need **3 separate terminal windows** (or use the provided PowerShell scripts):
+### Option 1: Using Docker (Recommended)
 
-### Terminal 1 - Backend API
+```bash
+# Start all services
+docker-compose up -d
 
-```powershell
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+Access:
+- Registration Form: http://localhost:5000
+- Admin Dashboard: http://localhost:5001
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+### Option 2: Manual Development
+
+**Terminal 1 - Backend:**
+```bash
 cd backend
-py main.py
+uvicorn main:app --reload --port 8000
 ```
 
-**Or use the quick-start script:**
-```powershell
-.\start-backend.ps1
-```
-
-✅ Backend runs at: **http://localhost:8000**
-📚 API Docs: **http://localhost:8000/docs**
-
-### Terminal 2 - Registration Form
-
-```powershell
+**Terminal 2 - Registration Form:**
+```bash
 cd frontend/registration-form
 npm run dev
+# Runs on http://localhost:5000
 ```
 
-**Or use the quick-start script:**
-```powershell
-.\start-registration.ps1
-```
-
-✅ Form runs at: **http://localhost:5000**
-
-### Terminal 3 - Admin Dashboard
-
-```powershell
+**Terminal 3 - Admin Dashboard:**
+```bash
 cd frontend/admin-dashboard
 npm run dev
+# Runs on http://localhost:5173
 ```
 
-**Or use the quick-start script:**
-```powershell
-.\start-admin.ps1
-```
-
-✅ Dashboard runs at: **http://localhost:5001**
-
-### Mobile App (Optional)
-
+**Terminal 4 - Flutter Scanner (Optional):**
 ```bash
 cd ticket_scanner
 flutter run
@@ -306,30 +437,78 @@ Once the backend is running, visit:
 
 ## 🔐 **Environment Variables**
 
-Create a `.env` file in the `backend/` directory based on `.env.example`:
+### Backend `.env` Configuration
+
+All configuration is done via `.env` files. **Never commit `.env` files** - they contain secrets!
+
+**Location:** `backend/.env`
 
 ```env
-# Database
-DATABASE_URL=sqlite:///./event_tickets.db
+# ============================================
+# DATABASE CONFIGURATION
+# ============================================
+# PostgreSQL (Production)
+DATABASE_URL=postgresql+psycopg2://user:password@host:5432/database
 
-# Email Configuration
+# SQLite (Development/Testing)
+# DATABASE_URL=sqlite:///./event_tickets.db
+
+# ============================================
+# SUPABASE STORAGE (File Uploads)
+# ============================================
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
+
+# ============================================
+# EMAIL CONFIGURATION (SMTP)
+# ============================================
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
+SMTP_PASSWORD=your-app-password  # Gmail: Use App Password, not regular password
 FROM_EMAIL=noreply@yourevent.com
-FROM_NAME=Event Ticket System
+FROM_NAME=Event Ticketing System
 
-# Security
-SECRET_KEY=your-secret-key-change-in-production
-ALGORITHM=HS256
+# ============================================
+# JWT AUTHENTICATION
+# ============================================
+JWT_SECRET_KEY=your-very-secret-key-change-in-production
+JWT_ALGORITHM=HS256
 
-# Frontend URLs (for CORS)
-FRONTEND_REGISTRATION_URL=http://localhost:5173
-FRONTEND_ADMIN_URL=http://localhost:5174
+# ============================================
+# CORS CONFIGURATION
+# ============================================
+CORS_ORIGINS=[\"http://localhost:5000\",\"http://localhost:5173\",\"http://localhost:5001\"]
 ```
 
-**Note**: For Gmail SMTP, you need to generate an [App Password](https://support.google.com/accounts/answer/185833) instead of using your regular password.
+### Frontend `.env` Configuration
+
+**Registration Form:** `frontend/registration-form/.env`
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+**Admin Dashboard:** `frontend/admin-dashboard/.env`
+```env
+VITE_API_URL=http://localhost:8000/api
+```
+
+### Production Environment Variables
+
+For deployed environments, update URLs:
+
+```env
+# Production Backend
+VITE_API_URL=https://your-backend.onrender.com
+# or
+VITE_API_URL=https://your-backend.onrender.com/api
+```
+
+**Important Notes:**
+- Gmail SMTP requires [App Password](https://support.google.com/accounts/answer/185833)
+- Supabase credentials from [Supabase Dashboard](https://supabase.com/dashboard)
+- Change `JWT_SECRET_KEY` for production deployments
+- Add production URLs to `CORS_ORIGINS`
 
 ---
 
@@ -485,10 +664,148 @@ If you have any questions or run into issues:
 
 ---
 
-## 🚦 **Current Status**
+---
 
-✅ **Phase 1**: Basic form submission (Backend + Database setup complete)
-🔄 **Next**: Build registration form UI with React + Tailwind
+## 📋 Database Schema
+
+### 6 Tables
+
+1. **registration** - User registration data
+2. **payment** - Payment tracking & screenshots
+3. **ticket** - Generated tickets with QR codes
+4. **attendance** - Check-in tracking
+5. **message** - Email notification logs
+6. **admin** - Admin users with bcrypt passwords
+
+### Relationships
+
+```
+registration (1) ←→ (1) payment
+registration (1) ←→ (N) tickets
+ticket (1) ←→ (1) attendance
+registration (1) ←→ (N) messages
+```
+
+---
+
+## 🔐 Default Credentials
+
+**Admin Login:**
+- Email: `admin@gmail.com`
+- Password: `admin123`
+
+⚠️ **Change password after first login!**
+
+---
+
+## 🌐 API Endpoints
+
+### Public
+- `POST /api/register` - Submit registration
+- `GET /api/registration/status/{email}` - Check status
+
+### Admin (Auth Required)
+- `POST /api/admin/login` - Login
+- `GET /api/admin/registrations` - List all
+- `GET /api/admin/registrations/{id}` - Get details
+- `POST /api/admin/registrations/{id}/approve` - Approve
+- `POST /api/admin/registrations/{id}/reject` - Reject
+- `GET /api/admin/stats` - Statistics
+
+### Health
+- `GET /` - API info
+- `GET /health` - Health check
+- `GET /ping` - Keep-alive
+
+---
+
+## 🐳 Docker Configuration
+
+### docker-compose.yml
+
+Orchestrates 3 services:
+1. **backend** - FastAPI (port 8000)
+2. **registration-form** - React (port 5000)
+3. **admin-dashboard** - React (port 5001)
+
+### Features
+- Uses `.env` files for all configuration
+- Health checks for backend
+- Dependency management (frontends wait for backend)
+- Volume mounts for development
+- Bridge network for inter-service communication
+
+### Commands
+```bash
+docker-compose up -d --build      # Start all
+docker-compose logs -f            # View logs
+docker-compose down               # Stop all
+docker-compose restart backend    # Restart service
+```
+
+---
+
+## ✅ Implementation Status
+
+### ✅ Completed
+- Backend API with all endpoints
+- PostgreSQL database with 6 tables
+- Supabase Storage integration
+- JWT authentication
+- Admin dashboard (10 sections)
+- Registration form (multi-step)
+- Email notifications
+- QR code generation
+- Ticket management
+- Docker deployment
+- Complete documentation
+
+### 🔄 In Progress
+- Mobile scanner app (Flutter)
+- PDF ticket generation
+- Advanced analytics
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Backend won't start:**
+- Check `.env` file exists and is configured
+- Verify database connection string
+- Ensure Supabase credentials are correct
+
+**Frontend shows blank page:**
+- Check `VITE_API_URL` in `.env`
+- Ensure backend is running
+- Check browser console for errors
+
+**Docker build fails:**
+- Ensure all `.env` files exist
+- Check Docker daemon is running
+- Verify network connectivity
+
+**Email not sending:**
+- Use Gmail App Password, not regular password
+- Enable 2-factor authentication
+- Check SMTP settings in backend `.env`
+
+---
+
+## 📚 Additional Resources
+
+- **Swagger UI:** http://localhost:8000/docs (when running)
+- **ReDoc:** http://localhost:8000/redoc (when running)
+- **Supabase Dashboard:** https://supabase.com/dashboard
+- **Gmail App Passwords:** https://support.google.com/accounts/answer/185833
+
+---
+
+## 👤 Author
+
+**FALLEN-01**
+- GitHub: [@FALLEN-01](https://github.com/FALLEN-01)
 
 ---
 
@@ -497,4 +814,5 @@ If you have any questions or run into issues:
 - 🔧 Admin Dashboard: http://localhost:5001
 - 📡 API Backend: http://localhost:8000
 - 📚 API Docs: http://localhost:8000/docs
-- 📱 Flutter App: Android/iOS only (web & desktop removed)
+
+**Project Status:** ✅ Production Ready | v1.0.0 | All configuration via `.env` files only!

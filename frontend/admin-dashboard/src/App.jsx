@@ -10,13 +10,11 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route 
           path="/dashboard" 
-          element={<Dashboard />} 
-          // Temporarily disabled for testing
-          // element={
-          //   <ProtectedRoute>
-          //     <Dashboard />
-          //   </ProtectedRoute>
-          // } 
+        element={
+        <ProtectedRoute>
+           <Dashboard />
+        </ProtectedRoute>
+        }
         />
         <Route path="/" element={<Navigate to="/auth" replace />} />
       </Routes>
