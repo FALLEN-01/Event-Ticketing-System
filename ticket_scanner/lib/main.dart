@@ -35,16 +35,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final storage = const FlutterSecureStorage();
   bool isLoading = false;
   // Get backend URL from environment or use default
-  // For production: https://your-render-url.onrender.com
+  // For production: https://event-ticketing-system-devx.onrender.com
   // For local development: http://10.0.2.2:8000 (Android emulator) or http://YOUR_IP:8000
   String apiBaseUrl = const String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://event-ticketing-system-devx.onrender.com',
   );
 
   @override
   void initState() {
     super.initState();
+    print('🌐 Backend URL: $apiBaseUrl');
     _checkLogin();
   }
 
@@ -294,11 +295,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
+        // Check if ticket is valid
+        if (data['valid'] != true) {
+          _showErrorDialog(data['message'] ?? 'Ticket verification failed');
+          setState(() {
+            isProcessing = false;
+          });
+          return;
+        }
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetailsScreen(
-              ticketData: data,
+              ticketData: data['details'],
               serialCode: serialCode,
               apiBaseUrl: widget.apiBaseUrl,
             ),
@@ -457,7 +467,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         final List<Barcode> barcodes = capture.barcodes;
                         for (final barcode in barcodes) {
                           if (barcode.rawValue != null && !isProcessing) {
-                            verifyTicket(barcode.rawValue!);
+                            String serialCode = barcode.rawValue!;
+
+                            // Check if QR code contains JSON
+                            try {
+                              final qrData = json.decode(serialCode);
+                              if (qrData is Map &&
+                                  qrData.containsKey('serial_code')) {
+                                serialCode = qrData['serial_code'];
+                              }
+                            } catch (e) {
+                              // Not JSON, use as-is
+                            }
+
+                            verifyTicket(serialCode);
                             break;
                           }
                         }
@@ -575,7 +598,7 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isUsed = ticketData['ticket_used'] ?? false;
+    final bool isCheckedIn = ticketData['checked_in'] ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -596,45 +619,46 @@ class DetailsScreen extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          isUsed ? Icons.cancel : Icons.check_circle,
-                          color: isUsed ? Colors.red : Colors.green,
+                          isCheckedIn ? Icons.cancel : Icons.check_circle,
+                          color: isCheckedIn ? Colors.red : Colors.green,
                           size: 40,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            isUsed ? 'TICKET ALREADY USED' : 'VALID TICKET',
+                            isCheckedIn ? 'ALREADY CHECKED IN' : 'VALID TICKET',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: isUsed ? Colors.red : Colors.green,
+                              color: isCheckedIn ? Colors.red : Colors.green,
                             ),
                           ),
                         ),
                       ],
                     ),
                     const Divider(height: 30),
-                    _buildDetailRow('Serial Code', serialCode),
-                    _buildDetailRow('Name', ticketData['full_name'] ?? 'N/A'),
+                    _buildDetailRow(
+                      'Serial Code',
+                      ticketData['serial_code'] ?? serialCode,
+                    ),
+                    _buildDetailRow('Name', ticketData['member_name'] ?? 'N/A'),
                     _buildDetailRow('Email', ticketData['email'] ?? 'N/A'),
+                    _buildDetailRow('Phone', ticketData['phone'] ?? 'N/A'),
                     _buildDetailRow(
-                      'Phone',
-                      ticketData['phone_number'] ?? 'N/A',
+                      'Team',
+                      ticketData['team_name'] ?? 'Individual',
                     ),
-                    _buildDetailRow(
-                      'Organization',
-                      ticketData['organization'] ?? 'N/A',
-                    ),
-                    _buildDetailRow(
-                      'Registered At',
-                      ticketData['registered_at'] ?? 'N/A',
-                    ),
+                    if (isCheckedIn)
+                      _buildDetailRow(
+                        'Checked In At',
+                        ticketData['check_in_time'] ?? 'N/A',
+                      ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            if (!isUsed)
+            if (!isCheckedIn)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -644,7 +668,7 @@ class DetailsScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Continue', style: TextStyle(fontSize: 18)),
+                  child: const Text('Check In', style: TextStyle(fontSize: 18)),
                 ),
               ),
             const SizedBox(height: 10),

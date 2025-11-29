@@ -19,8 +19,20 @@ function PaymentsVerification() {
   const fetchPayments = async () => {
     try {
       setLoading(true)
-      const response = await axiosInstance.get(`/admin/registrations?status_filter=${filter}`)
-      setRegistrations(response.data.registrations || [])
+      const response = await axiosInstance.get('/admin/registrations')
+      const allRegs = response.data.registrations || []
+      
+      // Filter by payment status
+      let filtered = allRegs
+      if (filter === 'pending') {
+        filtered = allRegs.filter(r => r.payment?.status === 'pending')
+      } else if (filter === 'approved') {
+        filtered = allRegs.filter(r => r.payment?.status === 'approved')
+      } else if (filter === 'rejected') {
+        filtered = allRegs.filter(r => r.payment?.status === 'rejected')
+      }
+      
+      setRegistrations(filtered)
     } catch (error) {
       console.error('Failed to fetch payments:', error)
     } finally {
@@ -75,15 +87,15 @@ function PaymentsVerification() {
 
   const stats = {
     total: registrations.length,
-    pending: registrations.filter(r => r.status === 'pending').length,
-    approved: registrations.filter(r => r.status === 'approved').length,
-    rejected: registrations.filter(r => r.status === 'rejected').length
+    pending: registrations.filter(r => r.payment?.status === 'pending').length,
+    approved: registrations.filter(r => r.payment?.status === 'approved').length,
+    rejected: registrations.filter(r => r.payment?.status === 'rejected').length
   }
 
   const filteredRegistrations = registrations.filter(reg => 
-    reg.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    reg.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     reg.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    reg.serial_code?.toLowerCase().includes(searchQuery.toLowerCase())
+    reg.tickets?.[0]?.serial_code?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

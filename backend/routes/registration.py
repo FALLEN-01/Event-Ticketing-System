@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 import os
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from database import get_db
 from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType
@@ -10,8 +12,10 @@ from utils.email import send_pending_confirmation_email
 from utils.storage import upload_payment_screenshot
 import json
 from datetime import datetime
+import re
 
 router = APIRouter(prefix="/api", tags=["Registration"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class RegistrationCreate(BaseModel):
@@ -45,7 +49,9 @@ class RegistrationResponse(BaseModel):
 
 
 @router.post("/register", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 async def register(
+    request: Request,
     name: str = Form(...),
     email: str = Form(...),
     phone: str = Form(...),
@@ -59,7 +65,25 @@ async def register(
     """
     Submit a new event registration with payment screenshot
     Creates records in: Registration, Payment, Attendance tables
+    Rate limited to 3 requests per minute per IP to prevent abuse
     """
+    # Input sanitization - prevent XSS
+    name = re.sub(r'[<>\"\'&]', '', name.strip())
+    email = email.strip().lower()
+    phone = re.sub(r'[^\d\+\-\s()]', '', phone.strip())
+    if team_name:
+        team_name = re.sub(r'[<>\"\'&]', '', team_name.strip())
+    if members:
+        members = re.sub(r'[<>\"\'&]', '', members.strip())
+    
+    # Validate email format
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format"
+        )
+    
     # Validate payment type
     if payment_type not in ["individual", "bulk"]:
         raise HTTPException(

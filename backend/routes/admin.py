@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import jwt
 import os
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from database import get_db
 from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType, Admin
@@ -13,6 +15,7 @@ from utils.email import send_approval_email, send_rejection_email
 from utils.audit import log_audit, AuditAction
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
+limiter = Limiter(key_func=get_remote_address)
 
 # JWT configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
@@ -77,6 +80,7 @@ class RegistrationsResponse(BaseModel):
 
 
 @router.post("/login", response_model=LoginResponse)
+@limiter.limit("5/minute")
 async def admin_login(
     login_data: LoginRequest,
     request: Request,

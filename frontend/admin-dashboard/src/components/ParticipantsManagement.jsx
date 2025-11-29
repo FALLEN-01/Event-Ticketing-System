@@ -1,13 +1,45 @@
-import { Search, Edit, Trash2, Plus, FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Edit, Trash2, Plus, FileText, RefreshCw } from 'lucide-react'
+import axiosInstance from '../config'
 
 function ParticipantsManagement() {
+  const [participants, setParticipants] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchParticipants()
+  }, [])
+
+  const fetchParticipants = async () => {
+    try {
+      setLoading(true)
+      const response = await axiosInstance.get('/admin/registrations')
+      setParticipants(response.data.registrations || [])
+    } catch (error) {
+      console.error('Error fetching participants:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredParticipants = participants.filter(p =>
+    p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.phone?.includes(searchTerm) ||
+    p.id?.toString().includes(searchTerm)
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Participants</h2>
-        <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm font-medium transition-all flex items-center gap-2">
-          <Plus size={16} />
-          Add Manual Entry
+        <h2 className="text-2xl font-bold text-white">Participants ({filteredParticipants.length})</h2>
+        <button 
+          onClick={fetchParticipants}
+          className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm font-medium transition-all flex items-center gap-2"
+        >
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          Refresh
         </button>
       </div>
 
@@ -19,6 +51,8 @@ function ParticipantsManagement() {
             type="text" 
             placeholder="Search by name, phone, or registration ID..." 
             className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -39,11 +73,42 @@ function ParticipantsManagement() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-white/10">
-                <td colSpan="7" className="p-8 text-center text-white/60">
-                  No participants found
-                </td>
-              </tr>
+              {loading ? (
+                <tr className="border-t border-white/10">
+                  <td colSpan="7" className="p-8 text-center text-white/60">
+                    <RefreshCw size={20} className="animate-spin inline mr-2" />
+                    Loading participants...
+                  </td>
+                </tr>
+              ) : filteredParticipants.length === 0 ? (
+                <tr className="border-t border-white/10">
+                  <td colSpan="7" className="p-8 text-center text-white/60">
+                    No participants found
+                  </td>
+                </tr>
+              ) : (
+                filteredParticipants.map((participant) => (
+                  <tr key={participant.id} className="border-t border-white/10 hover:bg-white/5">
+                    <td className="p-4 text-white">#{participant.id}</td>
+                    <td className="p-4 text-white font-medium">{participant.full_name}</td>
+                    <td className="p-4 text-white">{participant.email}</td>
+                    <td className="p-4 text-white">{participant.phone}</td>
+                    <td className="p-4 text-white">
+                      {participant.tickets?.map(t => t.serial_code).join(', ') || 'N/A'}
+                    </td>
+                    <td className="p-4 text-white/70 text-xs">
+                      {participant.team_name ? `Team: ${participant.team_name}` : 'Individual'}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <button className="p-1.5 hover:bg-white/10 rounded text-blue-400">
+                          <FileText size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

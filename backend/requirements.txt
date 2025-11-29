@@ -37,3 +37,7 @@ pyjwt[crypto]>=2.10.0
 # Password hashing - pin bcrypt to compatible version
 passlib[bcrypt]>=1.7.4
 bcrypt>=4.0.1,<5.0.0
+
+# Security
+slowapi>=0.1.9
+python-jose[cryptography]>=3.3.0
