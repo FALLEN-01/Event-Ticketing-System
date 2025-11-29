@@ -4,6 +4,7 @@ import axiosInstance from '../config'
 
 function PaymentsVerification() {
   const [registrations, setRegistrations] = useState([])
+  const [allRegistrations, setAllRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending')
   const [selectedPayment, setSelectedPayment] = useState(null)
@@ -21,6 +22,9 @@ function PaymentsVerification() {
       setLoading(true)
       const response = await axiosInstance.get('/admin/registrations')
       const allRegs = response.data.registrations || []
+      
+      // Store all registrations for stats
+      setAllRegistrations(allRegs)
       
       // Filter by payment status
       let filtered = allRegs
@@ -47,13 +51,20 @@ function PaymentsVerification() {
 
   const handleApprove = async (regId) => {
     try {
+      setLoading(true)
       await axiosInstance.post(`/admin/registrations/${regId}/approve`)
-      showNotification('Payment approved successfully!', 'success')
+      showNotification('Payment approved successfully! Sending approval email...', 'success')
       setSelectedPayment(null)
-      fetchPayments()
+      
+      // Wait a bit for email to process, then refresh
+      setTimeout(async () => {
+        await fetchPayments()
+        showNotification('Payment approved and email sent!', 'success')
+      }, 2000)
     } catch (error) {
       console.error('Failed to approve:', error)
       showNotification('Failed to approve payment', 'error')
+      setLoading(false)
     }
   }
 
@@ -63,16 +74,23 @@ function PaymentsVerification() {
       return
     }
     try {
+      setLoading(true)
       await axiosInstance.post(`/admin/registrations/${regId}/reject`, {
         reason: rejectReason
       })
-      showNotification('Payment rejected', 'success')
+      showNotification('Payment rejected. Sending rejection email...', 'success')
       setSelectedPayment(null)
       setRejectReason('')
-      fetchPayments()
+      
+      // Wait a bit for email to process, then refresh
+      setTimeout(async () => {
+        await fetchPayments()
+        showNotification('Payment rejected and email sent!', 'success')
+      }, 2000)
     } catch (error) {
       console.error('Failed to reject:', error)
       showNotification('Failed to reject payment', 'error')
+      setLoading(false)
     }
   }
 
@@ -86,10 +104,10 @@ function PaymentsVerification() {
   }
 
   const stats = {
-    total: registrations.length,
-    pending: registrations.filter(r => r.payment?.status === 'pending').length,
-    approved: registrations.filter(r => r.payment?.status === 'approved').length,
-    rejected: registrations.filter(r => r.payment?.status === 'rejected').length
+    total: allRegistrations.length,
+    pending: allRegistrations.filter(r => r.payment?.status === 'pending').length,
+    approved: allRegistrations.filter(r => r.payment?.status === 'approved').length,
+    rejected: allRegistrations.filter(r => r.payment?.status === 'rejected').length
   }
 
   const filteredRegistrations = registrations.filter(reg => 

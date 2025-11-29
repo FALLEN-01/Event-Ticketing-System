@@ -7,6 +7,36 @@ function AttendanceTracking() {
   const [stats, setStats] = useState({ expected: 0, checkedIn: 0, notCheckedIn: 0 })
   const [loading, setLoading] = useState(true)
 
+  const exportToCSV = () => {
+    if (attendance.length === 0) {
+      alert('No attendance data to export')
+      return
+    }
+
+    const headers = ['Ticket ID', 'Name', 'Email', 'Check-in Time']
+    const rows = attendance.map(record => [
+      record.ticketId,
+      record.name,
+      record.email,
+      new Date(record.checkInTime).toLocaleString()
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `attendance_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   useEffect(() => {
     fetchAttendance()
   }, [])
@@ -58,13 +88,22 @@ function AttendanceTracking() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Attendance Tracking</h2>
-        <button 
-          onClick={fetchAttendance}
-          className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm font-medium transition-all flex items-center gap-2"
-        >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={exportToCSV}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm font-medium transition-all flex items-center gap-2"
+          >
+            <Download size={16} />
+            Export CSV
+          </button>
+          <button 
+            onClick={fetchAttendance}
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm font-medium transition-all flex items-center gap-2"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
