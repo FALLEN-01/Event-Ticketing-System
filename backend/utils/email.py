@@ -10,6 +10,59 @@ import httpx
 import base64
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from models.settings import Settings
+
+
+def get_event_settings() -> dict:
+    """
+    Fetch event settings from database
+    Returns default values if settings not found
+    """
+    db = SessionLocal()
+    try:
+        settings = db.query(Settings).first()
+        if not settings:
+            # Return defaults if no settings found
+            return {
+                'event_name': "IEEE YESS'25",
+                'event_date': "20 September 2025",
+                'event_time': "09:00 am",
+                'event_venue': "Offline",
+                'event_location': "BWA JHDR, Kattangal, Kerala 673601, India",
+                'organization_name': "Event Ticketing System",
+                'support_email': "support@eventticketing.com",
+                'approval_email_subject': "🎉 Registration Confirmed!"
+            }
+        
+        # Format date and time
+        from datetime import datetime
+        try:
+            date_obj = datetime.strptime(settings.event_date, '%Y-%m-%d')
+            formatted_date = date_obj.strftime('%d %B %Y')
+        except:
+            formatted_date = settings.event_date
+        
+        # Format time
+        try:
+            time_obj = datetime.strptime(settings.event_time, '%H:%M')
+            formatted_time = time_obj.strftime('%I:%M %p')
+        except:
+            formatted_time = settings.event_time
+        
+        return {
+            'event_name': settings.event_name,
+            'event_date': formatted_date,
+            'event_time': formatted_time,
+            'event_venue': settings.event_venue,
+            'event_location': settings.event_location,
+            'organization_name': settings.organization_name,
+            'support_email': settings.support_email,
+            'approval_email_subject': settings.approval_email_subject
+        }
+    finally:
+        db.close()
 
 
 async def get_base64_image(file_source: str) -> Optional[str]:
@@ -279,17 +332,21 @@ async def send_approval_email(
     Returns:
         bool: True if email sent successfully
     """
-    subject = "🎉 Registration Confirmed!"
+    # Fetch settings from database
+    event_settings = get_event_settings()
+    subject = event_settings['approval_email_subject']
     
     # Determine if this is bulk or individual
     is_bulk = qr_code_paths and len(qr_code_paths) > 1
     
-    # Event details (customize these)
-    event_name = "IEEE YESS'25"
-    event_date = "20 September 2025 • 9:00 am"
-    event_venue = "Offline"
-    event_location = "BWA JHDR, Kattangal, Kerala 673601, India"
-    ticket_type = f"IEEE YESS'25 {f'({len(qr_code_paths)} tickets)' if is_bulk else ''}"
+    # Event details from database
+    event_name = event_settings['event_name']
+    event_date = f"{event_settings['event_date']} • {event_settings['event_time']}"
+    event_venue = event_settings['event_venue']
+    event_location = event_settings['event_location']
+    organization_name = event_settings['organization_name']
+    support_email = event_settings['support_email']
+    ticket_type = f"{event_name} {f'({len(qr_code_paths)} tickets)' if is_bulk else ''}"
     
     html_body = f"""
     <!DOCTYPE html>
@@ -569,8 +626,8 @@ async def send_approval_email(
                 <!-- Digital Ticket -->
                 <div class="ticket-card">
                     <div class="ticket-title">Your Digital Ticket</div>
-                    <div style="width: 250px; height: 250px; margin: 20px auto; background: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 10px;">
-                        <img src="QR_CODE_PLACEHOLDER" alt="Ticket QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+                    <div style="width: 280px; height: 280px; margin: 20px auto; background: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <img src="QR_CODE_PLACEHOLDER" alt="Ticket QR Code" style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; margin: auto;" />
                     </div>
                     <div class="serial-code">{serial_code}</div>
                     <div class="ticket-instruction">
@@ -608,11 +665,11 @@ async def send_approval_email(
             
             <!-- Footer -->
             <div class="footer">
-                <div class="footer-brand">EventTickets</div>
+                <div class="footer-brand">{organization_name}</div>
                 <div class="footer-tagline">Your vision, our platform, unforgettable events.</div>
                 <div class="footer-contact">
-                    Need help? Contact us at <a href="mailto:support@eventticketing.com">support@eventticketing.com</a><br>
-                    © 2025 EventTickets. All rights reserved.
+                    Need help? Contact us at <a href="mailto:{support_email}">{support_email}</a><br>
+                    © 2025 {organization_name}. All rights reserved.
                 </div>
             </div>
         </div>

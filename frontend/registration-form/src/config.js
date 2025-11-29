@@ -2,6 +2,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export const API_ENDPOINTS = {
+  BASE_URL: API_BASE_URL,
   REGISTER: `${API_BASE_URL}/api/register`,
   UPLOAD_PAYMENT: `${API_BASE_URL}/api/upload-payment`,
   UPLOAD_PHOTO: `${API_BASE_URL}/api/upload-photo`,

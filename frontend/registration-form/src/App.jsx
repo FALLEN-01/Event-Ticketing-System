@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { API_ENDPOINTS } from './config'
 
@@ -16,6 +16,30 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [notification, setNotification] = useState(null)
+  const [settings, setSettings] = useState({
+    event_name: 'Event Registration',
+    individual_price: 500,
+    bulk_price: 2000,
+    bulk_team_size: 4,
+    currency: 'INR'
+  })
+
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.BASE_URL}/admin/settings`)
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error)
+      // Use defaults if fetch fails
+    }
+  }
 
   const showNotification = (text, type = 'success') => {
     setNotification({ text, type })
@@ -89,8 +113,8 @@ function App() {
         return false
       }
       const memberList = formData.members.split(',').map(m => m.trim()).filter(m => m)
-      if (memberList.length !== 4) {
-        setMessage({ type: 'error', text: 'Bulk registration requires exactly 4 team members' })
+      if (memberList.length !== settings.bulk_team_size) {
+        setMessage({ type: 'error', text: `Bulk registration requires exactly ${settings.bulk_team_size} team members` })
         return false
       }
       // Validate each member name
@@ -232,7 +256,7 @@ function App() {
             <div style={{ textAlign: 'center', padding: '1.25rem 0.75rem' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👥</div>
               <div style={{ fontWeight: '700', fontSize: '1rem', marginBottom: '0.25rem', color: '#1f2937' }}>Bulk</div>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Team of 4 members</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Team of {settings.bulk_team_size} members</div>
             </div>
           </button>
         </div>
@@ -313,9 +337,9 @@ function App() {
               rows="4"
               className="lavender-input"
               style={{ resize: 'none' }}
-              placeholder="Name 1, Name 2, Name 3, Name 4"
+              placeholder={`Name 1, Name 2${settings.bulk_team_size > 2 ? ', Name 3' : ''}${settings.bulk_team_size > 3 ? ', Name 4' : ''}`}
             />
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter exactly 4 member names separated by commas</p>
+            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter exactly {settings.bulk_team_size} member names separated by commas</p>
           </div>
         </div>
       )}
@@ -340,7 +364,8 @@ function App() {
               style={{ width: '250px', height: '250px', display: 'block', objectFit: 'contain' }}
               onError={(e) => {
                 // Fallback if custom QR not found
-                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=yourupiid@bank&pn=EventName&am=${paymentType === 'bulk' ? '2000' : '500'}&cu=INR`
+                const amount = paymentType === 'bulk' ? settings.bulk_price : settings.individual_price
+                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${settings.upi_id || 'yourupiid@bank'}&pn=${encodeURIComponent(settings.event_name || 'Event')}&am=${amount}&cu=${settings.currency}`
               }}
             />
           </div>
@@ -348,7 +373,10 @@ function App() {
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Scan with any UPI app</p>
           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#7c3aed' }}>
-            {paymentType === 'bulk' ? 'Bulk Registration (Team of 4)' : 'Individual Registration'}
+            Amount: {settings.currency === 'INR' ? '₹' : settings.currency === 'USD' ? '$' : settings.currency === 'EUR' ? '€' : settings.currency === 'GBP' ? '£' : settings.currency}{paymentType === 'bulk' ? settings.bulk_price : settings.individual_price}
+          </p>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            {paymentType === 'bulk' ? `Bulk Registration (Team of ${settings.bulk_team_size})` : 'Individual Registration'}
           </p>
         </div>
       </div>

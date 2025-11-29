@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import os
 
 from database import init_db
-from routes import registration, admin, ticket, test
+from routes import registration, admin, ticket, test, settings
 from utils.storage import initialize_storage_buckets
 
 # Import for test route
@@ -56,6 +56,7 @@ app.include_router(registration.router)
 app.include_router(admin.router)
 app.include_router(ticket.router)
 app.include_router(test.router)  # Test endpoints
+app.include_router(settings.router)  # Settings API
 
 
 @app.get("/")
