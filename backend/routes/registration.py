@@ -61,17 +61,11 @@ async def register(
     phone: str = Form(...),
     team_name: Optional[str] = Form(None),
     members: Optional[str] = Form(None),
-    payment_type: str = Form(...),  # "individual" or "bulk"
+    payment_type: str = Form(...),
     payment_screenshot: UploadFile = File(...),
-    amount: str = Form(...),  # Mandatory amount
+    amount: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    """
-    Submit a new event registration with payment screenshot
-    Creates records in: Registration, Payment, Attendance tables
-    Rate limited to 3 requests per minute per IP to prevent abuse
-    """
-    # Input sanitization - prevent XSS
     name = re.sub(r'[<>\"\'&]', '', name.strip())
     email = email.strip().lower()
     phone = re.sub(r'[^\d\+\-\s()]', '', phone.strip())
@@ -112,10 +106,7 @@ async def register(
             detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}"
         )
     
-    # Read file content
     file_content = await payment_screenshot.read()
-    
-    # Upload to Supabase Storage
     file_url = await upload_payment_screenshot(file_content, payment_screenshot.filename)
     
     if not file_url:
@@ -125,7 +116,6 @@ async def register(
         )
     
     try:
-        # 1. Create registration record
         new_registration = Registration(
             name=name,
             email=email,
@@ -135,23 +125,21 @@ async def register(
             payment_type=PaymentType.BULK if payment_type == "bulk" else PaymentType.INDIVIDUAL
         )
         db.add(new_registration)
-        db.flush()  # Get the registration ID
+        db.flush()
         
-        # 2. Create payment record (payment_type removed - it's in Registration)
         new_payment = Payment(
             registration_id=new_registration.id,
             payment_screenshot=file_url,
             status=PaymentStatus.PENDING,
-            amount=float(amount),  # Mandatory amount
-            payment_method="UPI"  # Always UPI
+            amount=float(amount),
+            payment_method="UPI"
         )
         db.add(new_payment)
         db.flush()
         
-        # 3. Create tickets based on payment type
+        # Create tickets based on payment type
         tickets_created = []
         if payment_type == "individual":
-            # Individual registration: create 1 ticket
             ticket = Ticket(
                 registration_id=new_registration.id,
                 member_name=name,
@@ -161,27 +149,21 @@ async def register(
             db.flush()
             tickets_created.append(ticket)
             
-            # Create attendance record for this ticket
             attendance = Attendance(
                 ticket_id=ticket.id,
                 checked_in=False
             )
             db.add(attendance)
             
-        else:  # bulk
-            # Parse members from JSON or CSV
+        else:
             member_names = []
             if members:
                 try:
-                    # Try JSON format first
                     member_names = json.loads(members)
                     if not isinstance(member_names, list):
                         member_names = [str(members)]
                 except json.JSONDecodeError:
-                    # Fall back to CSV
                     member_names = [m.strip() for m in members.split(',') if m.strip()]
-            
-            # Validate member count for bulk (exactly 4 people)
             if len(member_names) != 4:
                 db.rollback()
                 raise HTTPException(
@@ -189,7 +171,6 @@ async def register(
                     detail=f"Bulk registration requires exactly 4 members. Got {len(member_names)} members."
                 )
             
-            # Create one ticket per member
             for idx, member_name in enumerate(member_names):
                 ticket = Ticket(
                     registration_id=new_registration.id,
@@ -200,18 +181,15 @@ async def register(
                 db.flush()
                 tickets_created.append(ticket)
                 
-                # Create attendance record for this ticket
                 attendance = Attendance(
                     ticket_id=ticket.id,
                     checked_in=False
                 )
-                db.add(attendance)
+                    db.add(attendance)
         
-        # Commit all changes
         db.commit()
         db.refresh(new_registration)
         
-        # Log new registration in audit trail
         ip_address = request.client.host if request.client else None
         user_agent = request.headers.get("user-agent", None)
         
@@ -233,11 +211,9 @@ async def register(
             user_agent=user_agent
         )
         
-        # 4. Send confirmation email and log it
         try:
             email_sent = await send_pending_confirmation_email(email, name, tickets_created[0].serial_code if tickets_created else "PENDING")
             
-            # Log the email in messages table
             email_log = Message(
                 registration_id=new_registration.id,
                 message_type=MessageType.CONFIRMATION,
@@ -252,7 +228,6 @@ async def register(
             db.add(email_log)
             db.commit()
             
-            # Log pending email sent
             if email_sent:
                 log_audit(
                     db=db,
@@ -266,7 +241,6 @@ async def register(
             
         except Exception as e:
             print(f"Warning: Failed to send confirmation email: {str(e)}")
-            # Don't fail the registration if email fails
         
         return RegistrationResponse(
             id=new_registration.id,
@@ -278,7 +252,6 @@ async def register(
         
     except Exception as e:
         db.rollback()
-        # Note: Supabase Storage handles cleanup automatically, no need to delete file
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create registration: {str(e)}"
@@ -287,10 +260,6 @@ async def register(
 
 @router.get("/registration/status/{email}")
 async def check_registration_status(email: str, db: Session = Depends(get_db)):
-    """
-    Check registration status by email
-    Returns registration info with ticket count
-    """
     registration = db.query(Registration).filter(Registration.email == email).first()
     if not registration:
         raise HTTPException(
@@ -298,14 +267,11 @@ async def check_registration_status(email: str, db: Session = Depends(get_db)):
             detail="No registration found with this email"
         )
     
-    # Get payment status
     payment = db.query(Payment).filter(Payment.registration_id == registration.id).first()
     payment_status = payment.status.value if payment else "pending"
     
-    # Count tickets
     tickets_count = db.query(Ticket).filter(Ticket.registration_id == registration.id).count()
     
-    # Get ticket serial codes
     tickets = db.query(Ticket).filter(Ticket.registration_id == registration.id).all()
     ticket_serials = [t.serial_code for t in tickets]
     
@@ -328,10 +294,6 @@ async def get_payment_qr_code(
     qr_type: str,
     db: Session = Depends(get_db)
 ):
-    """
-    Public endpoint to get payment QR code (individual or bulk)
-    Used by registration form to display payment QR codes
-    """
     if qr_type not in ["individual", "bulk"]:
         raise HTTPException(status_code=400, detail="Invalid QR type. Use 'individual' or 'bulk'")
     
@@ -339,19 +301,16 @@ async def get_payment_qr_code(
     if not settings:
         raise HTTPException(status_code=404, detail="Settings not configured")
     
-    # Get QR URL from database
     qr_url = settings.individual_qr_code if qr_type == "individual" else settings.bulk_qr_code
     
     if not qr_url:
         raise HTTPException(status_code=404, detail=f"{qr_type.capitalize()} QR code not uploaded yet")
     
     try:
-        # Fetch image from Cloudinary
         async with httpx.AsyncClient() as client:
             response = await client.get(qr_url)
             response.raise_for_status()
             
-            # Determine content type from Cloudinary URL
             content_type = "image/png"
             if ".jpg" in qr_url or ".jpeg" in qr_url:
                 content_type = "image/jpeg"

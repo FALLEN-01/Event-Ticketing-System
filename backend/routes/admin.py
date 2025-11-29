@@ -17,7 +17,6 @@ from utils.audit import log_audit, AuditAction
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 limiter = Limiter(key_func=get_remote_address)
 
-# JWT configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 12

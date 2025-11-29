@@ -45,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    print('🌐 Backend URL: $apiBaseUrl');
     _checkLogin();
   }
 
@@ -86,12 +85,14 @@ class _LoginScreenState extends State<LoginScreen> {
         await storage.write(key: 'admin_token', value: data['access_token']);
         await storage.write(key: 'admin_email', value: emailController.text);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ScannerScreen(apiBaseUrl: apiBaseUrl),
-          ),
-        );
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ScannerScreen(apiBaseUrl: apiBaseUrl),
+            ),
+          );
+        }
       } else {
         final error = json.decode(response.body);
         _showError(error['detail'] ?? 'Login failed');

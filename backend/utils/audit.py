@@ -1,7 +1,3 @@
-"""
-Audit logging utility
-Tracks all admin actions with IP, user agent, and detailed context
-"""
 from sqlalchemy.orm import Session
 from models.registration import AuditLog
 from typing import Optional
@@ -17,18 +13,6 @@ def log_audit(
     ip_address: Optional[str] = None,
     user_agent: Optional[str] = None
 ):
-    """
-    Create an audit log entry
-    
-    Args:
-        db: Database session
-        admin_id: ID of admin performing action
-        action: Action constant (e.g., "LOGIN", "APPROVE_PAYMENT")
-        details: Dictionary with additional context
-        registration_id: Related registration ID (if applicable)
-        ip_address: Client IP address
-        user_agent: Client user agent string
-    """
     audit_entry = AuditLog(
         admin_id=admin_id,
         action=action,
@@ -57,7 +41,6 @@ class AuditAction:
     UPLOAD_QR = "UPLOAD_QR"
     REGISTRATION_VIEW = "REGISTRATION_VIEW"
     REGISTRATION_LIST = "REGISTRATION_LIST"
-    # New actions
     NEW_REGISTRATION = "NEW_REGISTRATION"
     TICKET_CHECKIN = "TICKET_CHECKIN"
     SEND_APPROVAL_EMAIL = "SEND_APPROVAL_EMAIL"

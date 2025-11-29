@@ -7,18 +7,6 @@ from utils.storage import upload_qr_code
 
 
 async def generate_ticket_qr(serial_code: str, name: str, email: str) -> str:
-    """
-    Generate a QR code for a ticket and upload to Supabase Storage
-    
-    Args:
-        serial_code: Unique serial code for the ticket
-        name: Name of the ticket holder
-        email: Email of the ticket holder
-    
-    Returns:
-        str: Public URL of the uploaded QR code image
-    """
-    # Create QR code data (JSON format for easy parsing by scanner)
     qr_data = f'{{"serial_code":"{serial_code}","name":"{name}","email":"{email}"}}'
     
     # Generate QR code
