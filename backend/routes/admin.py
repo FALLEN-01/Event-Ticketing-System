@@ -1,15 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
+import os
 
 from database import get_db
-from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType
+from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType, Admin
 from utils.qr_generator import generate_ticket_qr
 from utils.email import send_approval_email, send_rejection_email
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
+
+# JWT configuration
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_HOURS = 12
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    role: Optional[str] = None
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    user: dict
 
 
 class RegistrationSummary(BaseModel):
@@ -45,6 +63,53 @@ class RegistrationsResponse(BaseModel):
     approved: int
     rejected: int
     registrations: List[RegistrationSummary]
+
+
+@router.post("/login", response_model=LoginResponse)
+async def admin_login(
+    login_data: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    # Find admin by email
+    admin = db.query(Admin).filter(Admin.email == login_data.email).first()
+    
+    if not admin or not admin.verify_password(login_data.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+    
+    # Create access token
+    expires = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    token_data = {
+        "sub": login_data.email,
+        "role": login_data.role or "admin",
+        "exp": expires
+    }
+    access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+    
+    # Set HTTP-only cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_HOURS * 3600
+    )
+    
+    user_data = {
+        "id": admin.id,
+        "email": admin.email,
+        "role": login_data.role or admin.role,
+        "name": admin.name
+    }
+    
+    return {
+        "access_token": access_token,
+        "user": user_data
+    }
 
 
 @router.get("/registrations", response_model=RegistrationsResponse)

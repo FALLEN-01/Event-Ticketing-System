@@ -229,7 +229,9 @@ class Admin(Base):
     
     # Credentials
     username = Column(String(255), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)  # Bcrypt hash
+    name = Column(String(255), nullable=False)
     
     # Role
     role = Column(Enum(AdminRole), default=AdminRole.REVIEWER, nullable=False)
@@ -243,6 +245,19 @@ class Admin(Base):
     
     # Relationships
     audit_logs = relationship("AuditLog", back_populates="admin", cascade="all, delete-orphan")
+    
+    def verify_password(self, password: str) -> bool:
+        """Verify password against hash"""
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        return pwd_context.verify(password, self.password_hash)
+    
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash password"""
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        return pwd_context.hash(password)
 
 
 # ==================== TABLE 7: AUDIT_LOGS ====================

@@ -1,26 +1,22 @@
 import os
+from dotenv import load_dotenv
 from supabase import create_client, Client
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Supabase configuration
-SUPABASE_URL = "https://ckkyegjnbcrmipozjahe.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNra3llZ2puYmNybWlwb3pqYWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNDMzNTAsImV4cCI6MjA3NzgxOTM1MH0.7yNGRvhzA82h7STPSEy4TwgSxqQlkbrkBlWYOBYbgR8"
+# Load environment variables from .env file
+load_dotenv()
 
-# PostgreSQL connection
-# IMPORTANT: Render requires Session Pooler (IPv4 compatible) on port 6543
-# Direct connection on port 5432 is IPv6-only and won't work on Render
+# Supabase configuration from environment
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+# PostgreSQL connection from environment
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Use environment variable for connection string if provided by Render
-if os.getenv("DATABASE_URL"):
-    DATABASE_URL = os.getenv("DATABASE_URL")
-else:
-    # Fallback to Session Pooler for IPv4 compatibility (Render requirement)
-    # Session mode: port 5432, supports persistent connections with IPv4
-    # Format: postgresql+psycopg2://postgres.[ref]:[password]@aws-1-[region].pooler.supabase.com:5432/postgres
-    DATABASE_URL = "postgresql+psycopg2://postgres.ckkyegjnbcrmipozjahe:lDUNu6JSD28FCmfS@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
 # SSL configuration for PostgreSQL connection
 ssl_args = {}

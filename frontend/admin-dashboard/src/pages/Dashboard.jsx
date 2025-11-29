@@ -72,11 +72,11 @@ function Dashboard() {
           </nav>
 
           <div className="p-6 shrink-0">
-            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all">
+            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all text-left">
               <Settings size={22} className="shrink-0" />
               <span>Settings</span>
             </button>
-            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all">
+            <button style={{ marginBottom: '20px', paddingLeft: '32px' }} className="w-full flex items-center gap-4 pr-6 py-5 rounded-xl text-white/70 hover:text-white transition-all text-left">
               <LogOut size={22} className="shrink-0" />
               <span>Logout</span>
             </button>
