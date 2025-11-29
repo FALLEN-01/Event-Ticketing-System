@@ -58,6 +58,11 @@ function AuditLogs() {
       UPDATE_SETTINGS: 'bg-orange-500/20 text-orange-300',
       UPLOAD_QR: 'bg-cyan-500/20 text-cyan-300',
       PASSWORD_CHANGE: 'bg-pink-500/20 text-pink-300',
+      NEW_REGISTRATION: 'bg-emerald-500/20 text-emerald-300',
+      TICKET_CHECKIN: 'bg-indigo-500/20 text-indigo-300',
+      SEND_APPROVAL_EMAIL: 'bg-blue-400/20 text-blue-300',
+      SEND_REJECTION_EMAIL: 'bg-red-400/20 text-red-300',
+      SEND_PENDING_EMAIL: 'bg-yellow-400/20 text-yellow-300',
     }
     return colors[action] || 'bg-gray-500/20 text-gray-300'
   }

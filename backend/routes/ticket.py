@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -6,6 +6,7 @@ from typing import Optional
 from database import get_db
 from models.registration import Registration, Ticket, Attendance, PaymentStatus, Payment
 from datetime import datetime
+from utils.audit import log_audit, AuditAction
 
 router = APIRouter(tags=["Ticket Verification"])
 
@@ -125,11 +126,13 @@ async def verify_ticket(
 @router.post("/mark-used/{serial}", response_model=MarkUsedResponse)
 async def mark_ticket_used(
     serial: str,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
     Mark a ticket as checked in (used) after successful entry
     Updates the attendance record for this ticket
+    Logs audit trail for check-in
     """
     # Find ticket by serial code
     ticket = db.query(Ticket).filter(
@@ -182,6 +185,25 @@ async def mark_ticket_used(
     attendance.checked_in = True
     attendance.check_in_time = datetime.utcnow()
     db.commit()
+    
+    # Log audit trail (admin_id = 1 for scanner app, could be improved to track actual scanner user)
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent", None)
+    
+    log_audit(
+        db=db,
+        admin_id=1,  # Scanner app user
+        action=AuditAction.TICKET_CHECKIN,
+        details={
+            "serial_code": ticket.serial_code,
+            "member_name": ticket.member_name,
+            "registration_id": registration.id,
+            "check_in_time": attendance.check_in_time.isoformat()
+        },
+        registration_id=registration.id,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
     
     return MarkUsedResponse(
         success=True,

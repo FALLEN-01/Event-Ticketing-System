@@ -396,6 +396,22 @@ async def approve_registration(
         db.add(message)
         db.commit()
         
+        # Log email sending in audit trail
+        if email_sent:
+            log_audit(
+                db=db,
+                admin_id=1,  # TODO: Extract from JWT token
+                action=AuditAction.SEND_APPROVAL_EMAIL,
+                details={
+                    "email": registration.email,
+                    "ticket_count": len(tickets),
+                    "serial_codes": [t.serial_code for t in tickets]
+                },
+                registration_id=registration.id,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent", None)
+            )
+        
         return {
             "message": "Registration approved successfully",
             "email_sent": email_sent,
@@ -505,6 +521,21 @@ async def reject_registration(
         )
         db.add(message)
         db.commit()
+        
+        # Log email sending in audit trail
+        if email_sent:
+            log_audit(
+                db=db,
+                admin_id=1,  # TODO: Extract from JWT token
+                action=AuditAction.SEND_REJECTION_EMAIL,
+                details={
+                    "email": registration.email,
+                    "reason": reject_data.reason
+                },
+                registration_id=registration.id,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent", None)
+            )
         
         return {
             "message": "Registration rejected successfully",

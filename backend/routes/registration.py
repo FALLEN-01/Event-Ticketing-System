@@ -207,6 +207,28 @@ async def register(
         db.commit()
         db.refresh(new_registration)
         
+        # Log new registration in audit trail
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent", None)
+        
+        from utils.audit import log_audit, AuditAction
+        log_audit(
+            db=db,
+            admin_id=1,  # System user for public registrations
+            action=AuditAction.NEW_REGISTRATION,
+            details={
+                "registration_id": new_registration.id,
+                "name": name,
+                "email": email,
+                "payment_type": payment_type,
+                "ticket_count": len(tickets_created),
+                "amount": amount
+            },
+            registration_id=new_registration.id,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        
         # 4. Send confirmation email and log it
         try:
             email_sent = await send_pending_confirmation_email(email, name, tickets_created[0].serial_code if tickets_created else "PENDING")
@@ -225,6 +247,18 @@ async def register(
                 email_log.sent_at = datetime.utcnow()
             db.add(email_log)
             db.commit()
+            
+            # Log pending email sent
+            if email_sent:
+                log_audit(
+                    db=db,
+                    admin_id=1,
+                    action=AuditAction.SEND_PENDING_EMAIL,
+                    details={"email": email, "name": name},
+                    registration_id=new_registration.id,
+                    ip_address=ip_address,
+                    user_agent=user_agent
+                )
             
         except Exception as e:
             print(f"Warning: Failed to send confirmation email: {str(e)}")
