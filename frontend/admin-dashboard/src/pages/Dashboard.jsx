@@ -1,9 +1,19 @@
 ﻿import { useState } from 'react'
-import { LayoutDashboard, Calendar, Ticket, Users, ClipboardCheck, CreditCard, CheckCircle, Shield, Settings, FileText, LogOut, Bell } from 'lucide-react'
+import { LayoutDashboard, Calendar, Ticket, Users, User, ClipboardCheck, CreditCard, CheckCircle, Shield, Settings, FileText, LogOut, Bell } from 'lucide-react'
+import DashboardOverview from '../components/DashboardOverview'
+import EventsManagement from '../components/EventsManagement'
+import TicketsManagement from '../components/TicketsManagement'
+import ParticipantsManagement from '../components/ParticipantsManagement'
+import AttendanceTracking from '../components/AttendanceTracking'
+import Approvals from '../components/Approvals'
+import PaymentsVerification from '../components/PaymentsVerification'
+import AdminsRoles from '../components/AdminsRoles'
+import SettingsPage from '../components/SettingsPage'
+import AuditLog from '../components/AuditLog'
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [showNotifications, setShowNotifications] = useState(false) ;
+  const [showNotifications, setShowNotifications] = useState(false)
   return (
     <div className="min-h-screen w-full relative">
       <div 
@@ -15,7 +25,7 @@ function Dashboard() {
           backgroundAttachment: "fixed"
         }}
       >
-        <div className="absolute inset-0 bg-linear-to-br from-black/40 via-black/30 to-black/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/50"></div>
       </div>
 
       <div className="relative z-10 flex min-h-screen">
