@@ -626,8 +626,10 @@ async def send_approval_email(
                 <!-- Digital Ticket -->
                 <div class="ticket-card">
                     <div class="ticket-title">Your Digital Ticket</div>
-                    <div style="width: 280px; height: 280px; margin: 20px auto; background: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <img src="QR_CODE_PLACEHOLDER" alt="Ticket QR Code" style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; margin: auto;" />
+                    <div style="text-align: center;">
+                        <div style="width: 280px; height: 280px; margin: 20px auto; background: #ffffff; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <img src="QR_CODE_PLACEHOLDER" alt="Ticket QR Code" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;" />
+                        </div>
                     </div>
                     <div class="serial-code">{serial_code}</div>
                     <div class="ticket-instruction">
@@ -650,6 +652,7 @@ async def send_approval_email(
                         <span class="info-value">{serial_code}</span>
                     </div>
                     {f'<div class="info-row"><span class="info-label">TEAM: </span><span class="info-value">{team_name}</span></div>' if team_name else ''}
+                </div>
                 
                 <!-- Important Notes -->
                 <div class="notes-section">
