@@ -45,21 +45,57 @@ function App() {
   }
 
   const validateStep1 = () => {
+    // Check required fields
     if (!formData.name || !formData.email || !formData.phone || !paymentType) {
       setMessage({ type: 'error', text: 'Please fill in all required fields' })
       return false
     }
-    if (paymentType === 'bulk' && (!formData.team_name || !formData.members)) {
-      setMessage({ type: 'error', text: 'Please provide team name and all member names' })
+
+    // Validate name
+    if (formData.name.trim().length < 2) {
+      setMessage({ type: 'error', text: 'Please enter a valid name (at least 2 characters)' })
       return false
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address' })
+      return false
+    }
+
+    // Validate phone number (10 digits, optionally with +91 or country code)
+    const phoneRegex = /^(\+\d{1,3}[- ]?)?\d{10}$/
+    const cleanPhone = formData.phone.replace(/[\s-]/g, '')
+    if (!phoneRegex.test(cleanPhone)) {
+      setMessage({ type: 'error', text: 'Please enter a valid 10-digit phone number' })
+      return false
+    }
+
+    // Validate bulk registration fields
     if (paymentType === 'bulk') {
-      const memberList = formData.members.split(',').map(m => m.trim()).filter(m => m)
-      if (memberList.length !== 4) {
-        setMessage({ type: 'error', text: 'Please provide exactly 4 team members (comma-separated)' })
+      if (!formData.team_name || formData.team_name.trim().length < 2) {
+        setMessage({ type: 'error', text: 'Please enter a valid team name' })
         return false
       }
+      if (!formData.members) {
+        setMessage({ type: 'error', text: 'Please provide all team member names' })
+        return false
+      }
+      const memberList = formData.members.split(',').map(m => m.trim()).filter(m => m)
+      if (memberList.length !== 4) {
+        setMessage({ type: 'error', text: 'Bulk registration requires exactly 4 team members' })
+        return false
+      }
+      // Validate each member name
+      for (const member of memberList) {
+        if (member.length < 2) {
+          setMessage({ type: 'error', text: 'Each team member name must be at least 2 characters' })
+          return false
+        }
+      }
     }
+
     return true
   }
 
@@ -176,18 +212,19 @@ function App() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Registration Type - Moved to Top */}
       <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem' }}>
           Registration Type <span style={{ color: '#ef4444' }}>*</span>
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           <button
             type="button"
             onClick={() => setPaymentType('individual')}
             className={`registration-card ${paymentType === 'individual' ? 'registration-card-active' : ''}`}
           >
-            <div style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
-              <div style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.125rem' }}>Individual</div>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>1 Person</div>
+            <div style={{ textAlign: 'center', padding: '1.25rem 0.75rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👤</div>
+              <div style={{ fontWeight: '700', fontSize: '1rem', marginBottom: '0.25rem', color: '#1f2937' }}>Individual</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Single participant</div>
             </div>
           </button>
           <button
@@ -195,9 +232,10 @@ function App() {
             onClick={() => setPaymentType('bulk')}
             className={`registration-card ${paymentType === 'bulk' ? 'registration-card-active' : ''}`}
           >
-            <div style={{ textAlign: 'center', padding: '0.75rem 0.5rem' }}>
-              <div style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.125rem' }}>Bulk</div>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Multiple</div>
+            <div style={{ textAlign: 'center', padding: '1.25rem 0.75rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👥</div>
+              <div style={{ fontWeight: '700', fontSize: '1rem', marginBottom: '0.25rem', color: '#1f2937' }}>Bulk</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Team of 4 members</div>
             </div>
           </button>
         </div>
@@ -214,7 +252,7 @@ function App() {
           value={formData.name}
           onChange={handleInputChange}
           className="lavender-input"
-          placeholder="Enter participant name"
+          placeholder=""
         />
       </div>
 
@@ -229,7 +267,7 @@ function App() {
           value={formData.email}
           onChange={handleInputChange}
           className="lavender-input"
-          placeholder="your.email@example.com"
+          placeholder=""
         />
       </div>
 
@@ -244,22 +282,7 @@ function App() {
           value={formData.phone}
           onChange={handleInputChange}
           className="lavender-input"
-          placeholder="+91 9876543210"
-        />
-      </div>
-
-      {/* Constituency */}
-      <div>
-        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.4rem' }}>
-          Constituency
-        </label>
-        <input
-          type="text"
-          name="constituency"
-          value={formData.constituency || ''}
-          onChange={handleInputChange}
-          className="lavender-input"
-          placeholder="Enter Constituency"
+          placeholder=""
         />
       </div>
 
@@ -278,7 +301,7 @@ function App() {
               value={formData.team_name}
               onChange={handleInputChange}
               className="lavender-input"
-              placeholder="Enter your team name"
+              placeholder=""
             />
           </div>
 
@@ -293,8 +316,9 @@ function App() {
               rows="4"
               className="lavender-input"
               style={{ resize: 'none' }}
-              placeholder="Enter team member names (comma-separated)"
+              placeholder="Name 1, Name 2, Name 3, Name 4"
             />
+            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter exactly 4 member names separated by commas</p>
           </div>
         </div>
       )}
@@ -321,7 +345,7 @@ function App() {
             id="payment_screenshot"
           />
           <label htmlFor="payment_screenshot" style={{ cursor: 'pointer' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.75rem', color: '#c4b5fd' }}>??</div>
+            <div style={{ fontSize: '3rem', marginBottom: '0.75rem', color: '#c4b5fd' }}>📷</div>
             <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>Click to upload payment screenshot</p>
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>JPG, PNG, or WebP (Max 2MB)</p>
           </label>
@@ -330,7 +354,7 @@ function App() {
         {paymentScreenshot && (
           <div className="file-selected-box">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534' }}>
-              <span style={{ fontSize: '1.25rem' }}>?</span>
+              <span style={{ fontSize: '1.25rem' }}>✅</span>
               <span style={{ fontWeight: '600' }}>File selected: {paymentScreenshot.name}</span>
             </div>
             <div style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '0.25rem' }}>
@@ -385,7 +409,7 @@ function App() {
       </div>
 
       <div className="info-box">
-        <span className="info-box-icon">??</span>
+        <span className="info-box-icon">ℹ️</span>
         <div className="info-box-content">
           <p className="info-box-title">Important Notice</p>
           <p className="info-box-text">
@@ -402,12 +426,13 @@ function App() {
       <div className="decorative-circle-1"></div>
       <div className="decorative-circle-2"></div>
       
-      <div style={{ maxWidth: '42rem', width: '100%', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '48rem', width: '100%', position: 'relative', zIndex: 10, padding: '0 1rem' }}>
         {/* Form Card */}
         <div className="form-container">
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937' }}>Event Registration</h1>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Event Registration</h1>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Complete the form to register for the event</p>
           </div>
 
           {/* Step Indicator */}
@@ -417,7 +442,7 @@ function App() {
           {message.text && (
             <div className={message.type === 'success' ? 'alert-success' : 'alert-error'}>
               <span style={{ fontSize: '1.25rem' }}>
-                {message.type === 'success' ? '?' : '?'}
+                {message.type === 'success' ? '✅' : '⚠️'}
               </span>
               <span style={{ fontWeight: '500' }}>{message.text}</span>
             </div>
@@ -444,7 +469,7 @@ function App() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="lavender-button"
+                className="orange-button"
                 style={{ marginLeft: 'auto' }}
               >
                 Save & Continue
@@ -454,7 +479,7 @@ function App() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="lavender-button"
+                className="orange-button"
                 style={{ marginLeft: 'auto' }}
               >
                 {loading ? (

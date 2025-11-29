@@ -319,11 +319,18 @@ input[type="file"] {
   border-radius: 16px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   padding: 2.5rem 3.5rem;
-  max-width: 550px;
+  max-width: 650px;
   width: 100%;
   position: relative;
   z-index: 10;
   min-height: 580px;
+}
+
+@media (max-width: 640px) {
+  .form-container {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
 }
 
 .decorative-circle-1 {
@@ -382,13 +389,13 @@ input[type="file"] {
   box-shadow: 0 4px 6px rgba(196, 181, 253, 0.3);
 }
 
-.lavender-button:hover:not(:disabled) {
+.orange-button:hover:not(:disabled) {
   background: #a78bfa;
   transform: translateY(-2px);
   box-shadow: 0 8px 12px rgba(196, 181, 253, 0.4);
 }
 
-.lavender-button:disabled {
+.orange-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
