@@ -37,7 +37,6 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
-      // Use defaults if fetch fails
     }
   }
 

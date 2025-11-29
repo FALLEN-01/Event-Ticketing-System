@@ -23,10 +23,8 @@ function PaymentsVerification() {
       const response = await axiosInstance.get('/admin/registrations')
       const allRegs = response.data.registrations || []
       
-      // Store all registrations for stats
       setAllRegistrations(allRegs)
       
-      // Filter by payment status
       let filtered = allRegs
       if (filter === 'pending') {
         filtered = allRegs.filter(r => r.payment?.status === 'pending')
@@ -56,7 +54,6 @@ function PaymentsVerification() {
       showNotification('Payment approved successfully! Sending approval email...', 'success')
       setSelectedPayment(null)
       
-      // Wait a bit for email to process, then refresh
       setTimeout(async () => {
         await fetchPayments()
         showNotification('Payment approved and email sent!', 'success')
@@ -82,7 +79,6 @@ function PaymentsVerification() {
       setSelectedPayment(null)
       setRejectReason('')
       
-      // Wait a bit for email to process, then refresh
       setTimeout(async () => {
         await fetchPayments()
         showNotification('Payment rejected and email sent!', 'success')
