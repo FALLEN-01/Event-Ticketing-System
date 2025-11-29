@@ -12,6 +12,40 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
 
+async def get_base64_image(file_source: str) -> Optional[str]:
+    """
+    Convert image to base64 for inline embedding in emails
+    
+    Args:
+        file_source: URL or local file path
+    
+    Returns:
+        Base64 encoded image string with data URI prefix
+    """
+    try:
+        if file_source.startswith(('http://', 'https://')):
+            # Download from URL
+            async with httpx.AsyncClient() as client:
+                response = await client.get(file_source)
+                if response.status_code == 200:
+                    image_data = base64.b64encode(response.content).decode()
+                    # Detect image type from extension
+                    ext = file_source.split('.')[-1].lower()
+                    mime_type = f'image/{ext}' if ext in ['png', 'jpg', 'jpeg', 'gif'] else 'image/png'
+                    return f'data:{mime_type};base64,{image_data}'
+        else:
+            # Local file
+            if os.path.exists(file_source):
+                with open(file_source, 'rb') as f:
+                    image_data = base64.b64encode(f.read()).decode()
+                    ext = file_source.split('.')[-1].lower()
+                    mime_type = f'image/{ext}' if ext in ['png', 'jpg', 'jpeg', 'gif'] else 'image/png'
+                    return f'data:{mime_type};base64,{image_data}'
+    except Exception as e:
+        print(f'⚠️ Failed to encode image {file_source}: {str(e)}')
+    return None
+
+
 # Email configuration from environment
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp-relay.brevo.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
@@ -231,7 +265,7 @@ async def send_approval_email(
     qr_code_paths: Optional[list] = None
 ) -> bool:
     """
-    Send approval email with ticket QR code(s)
+    Send approval email with ticket QR code(s) - Modern dark theme design inspired by Snaptiqz
     Supports single QR (individual) or multiple QRs (bulk)
     
     Args:
@@ -245,85 +279,367 @@ async def send_approval_email(
     Returns:
         bool: True if email sent successfully
     """
-    subject = "🎉 Your Event Registration is Approved!"
-    
-    team_info = f"<p><strong>Team:</strong> {team_name}</p>" if team_name else ""
+    subject = "🎉 Registration Confirmed!"
     
     # Determine if this is bulk or individual
     is_bulk = qr_code_paths and len(qr_code_paths) > 1
-    ticket_count_text = f"<p>You have <strong>{len(qr_code_paths)} tickets</strong> for your team members.</p>" if is_bulk else ""
+    
+    # Event details (customize these)
+    event_name = "IEEE YESS'25"
+    event_date = "20 September 2025 • 9:00 am"
+    event_venue = "Offline"
+    event_location = "BWA JHDR, Kattangal, Kerala 673601, India"
+    ticket_type = f"IEEE YESS'25 {f'({len(qr_code_paths)} tickets)' if is_bulk else ''}"
     
     html_body = f"""
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-            .ticket-box {{ background: white; border: 2px dashed #667eea; padding: 20px; margin: 20px 0; border-radius: 10px; text-align: center; }}
-            .serial {{ font-size: 24px; font-weight: bold; color: #667eea; margin: 10px 0; }}
-            .footer {{ text-align: center; margin-top: 20px; color: #777; font-size: 12px; }}
-            .button {{ display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }}
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: #ffffff;
+                line-height: 1.6;
+                padding: 20px;
+            }}
+            .email-container {{
+                max-width: 600px;
+                margin: 0 auto;
+                background: #1e1e2e;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }}
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 40px 30px;
+                text-align: center;
+            }}
+            .logo {{
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                border-radius: 20px;
+                margin: 0 auto 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 40px;
+            }}
+            .header h1 {{
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: #ffffff;
+            }}
+            .header p {{
+                font-size: 16px;
+                color: #e0e0e0;
+            }}
+            .content {{
+                padding: 30px;
+            }}
+            .event-card {{
+                background: #252538;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 20px 0;
+            }}
+            .event-title {{
+                font-size: 24px;
+                font-weight: 700;
+                color: #ffd700;
+                margin-bottom: 20px;
+            }}
+            .event-detail {{
+                display: flex;
+                align-items: flex-start;
+                margin: 15px 0;
+                padding: 10px 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }}
+            .event-detail:last-child {{
+                border-bottom: none;
+            }}
+            .icon {{
+                width: 24px;
+                height: 24px;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }}
+            .detail-content {{
+                flex: 1;
+            }}
+            .detail-label {{
+                font-size: 12px;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 5px;
+            }}
+            .detail-value {{
+                font-size: 16px;
+                color: #ffffff;
+                font-weight: 500;
+            }}
+            .ticket-card {{
+                background: #1a1a2e;
+                border: 2px solid #667eea;
+                border-radius: 16px;
+                padding: 30px;
+                margin: 25px 0;
+                text-align: center;
+            }}
+            .ticket-title {{
+                font-size: 20px;
+                font-weight: 700;
+                color: #ffffff;
+                margin-bottom: 20px;
+            }}
+            .qr-placeholder {{
+                width: 200px;
+                height: 200px;
+                margin: 20px auto;
+                background: #ffffff;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color: #666;
+            }}
+            .serial-code {{
+                font-size: 18px;
+                font-weight: 700;
+                color: #ffd700;
+                letter-spacing: 2px;
+                margin: 15px 0;
+            }}
+            .ticket-instruction {{
+                font-size: 14px;
+                color: #aaa;
+                margin-top: 15px;
+            }}
+            .attendee-info {{
+                background: #252538;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+            }}
+            .info-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }}
+            .info-row:last-child {{
+                border-bottom: none;
+            }}
+            .info-label {{
+                color: #888;
+                font-size: 14px;
+            }}
+            .info-value {{
+                color: #ffffff;
+                font-weight: 500;
+                font-size: 14px;
+            }}
+            .notes-section {{
+                background: rgba(102, 126, 234, 0.1);
+                border-left: 4px solid #667eea;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+            }}
+            .notes-title {{
+                font-size: 16px;
+                font-weight: 700;
+                color: #667eea;
+                margin-bottom: 15px;
+            }}
+            .notes-section ul {{
+                list-style: none;
+                padding: 0;
+            }}
+            .notes-section li {{
+                padding: 8px 0;
+                padding-left: 25px;
+                position: relative;
+                font-size: 14px;
+                color: #ccc;
+            }}
+            .notes-section li:before {{
+                content: "•";
+                position: absolute;
+                left: 0;
+                color: #667eea;
+                font-weight: bold;
+                font-size: 20px;
+            }}
+            .footer {{
+                background: #1a1a2e;
+                padding: 30px;
+                text-align: center;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }}
+            .footer-brand {{
+                font-size: 20px;
+                font-weight: 700;
+                color: #667eea;
+                margin-bottom: 10px;
+            }}
+            .footer-tagline {{
+                font-size: 12px;
+                color: #888;
+                margin-bottom: 15px;
+            }}
+            .footer-contact {{
+                font-size: 11px;
+                color: #666;
+            }}
+            .footer-contact a {{
+                color: #667eea;
+                text-decoration: none;
+            }}
+            .download-btn {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #ffffff;
+                padding: 12px 30px;
+                border-radius: 8px;
+                text-decoration: none;
+                display: inline-block;
+                margin: 15px 0;
+                font-weight: 600;
+                font-size: 14px;
+            }}
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="email-container">
+            <!-- Header -->
             <div class="header">
-                <h1>🎉 Registration Approved!</h1>
+                <div class="logo">🎓</div>
+                <h1>Registration Confirmed!</h1>
+                <p>You're all set for {event_name}</p>
             </div>
+            
+            <!-- Content -->
             <div class="content">
-                <p>Dear {name},</p>
-                
-                <p>Congratulations! Your event registration has been <strong>approved</strong>.</p>
-                
-                {team_info}
-                {ticket_count_text}
-                
-                <div class="ticket-box">
-                    <h2>Your Event Ticket{'s' if is_bulk else ''}</h2>
-                    <p>Reference serial code:</p>
-                    <div class="serial">{serial_code}</div>
-                    <p style="margin-top: 20px; color: #666;">
-                        {'All QR code tickets are attached to this email.' if is_bulk else 'Your QR code ticket is attached to this email.'}
-                    </p>
-                    <p style="font-size: 14px; color: #999;">
-                        {'Each team member needs their own QR code ticket.' if is_bulk else 'Please save the QR code and present it at the event entrance.'}
-                    </p>
+                <!-- Event Details Card -->
+                <div class="event-card">
+                    <div class="event-title">{event_name}</div>
+                    
+                    <div class="event-detail">
+                        <div class="icon">📅</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Date & Time</div>
+                            <div class="detail-value">{event_date}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-detail">
+                        <div class="icon">📍</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Venue</div>
+                            <div class="detail-value">{event_venue}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-detail">
+                        <div class="icon">🗺️</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value">{event_location}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-detail">
+                        <div class="icon">🎫</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Ticket Type</div>
+                            <div class="detail-value">{ticket_type}</div>
+                        </div>
+                    </div>
                 </div>
                 
-                <h3>Important Instructions:</h3>
-                <ul>
-                    {'<li>Distribute QR codes to each team member</li>' if is_bulk else ''}
-                    <li>Save the attached QR code ticket{'s' if is_bulk else ''} on {'your phones' if is_bulk else 'your phone'}</li>
-                    <li>Bring printed cop{'ies' if is_bulk else 'y'} or show the QR code on {'phones' if is_bulk else 'your phone'} at entry</li>
-                    <li>Arrive at least 30 minutes before the event</li>
-                    <li>{'Each serial code is unique - do not share' if is_bulk else 'Your serial code is unique - do not share it'}</li>
-                </ul>
+                <!-- Digital Ticket -->
+                <div class="ticket-card">
+                    <div class="ticket-title">Your Digital Ticket</div>
+                    <div style="width: 250px; height: 250px; margin: 20px auto; background: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                        <img src="QR_CODE_PLACEHOLDER" alt="Ticket QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+                    </div>
+                    <div class="serial-code">{serial_code}</div>
+                    <div class="ticket-instruction">
+                        Show this QR code at the venue
+                    </div>
+                </div>
                 
-                <p style="margin-top: 30px;">We look forward to seeing you at the event!</p>
+                <!-- Attendee Info -->
+                <div class="attendee-info">
+                    <div class="info-row">
+                        <span class="info-label">ATTENDEE: </span>
+                        <span class="info-value">{name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">EMAIL: </span>
+                        <span class="info-value">{to_email}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">TICKET ID: </span>
+                        <span class="info-value">{serial_code}</span>
+                    </div>
+                    {f'<div class="info-row"><span class="info-label">TEAM: </span><span class="info-value">{team_name}</span></div>' if team_name else ''}
                 
-                <p>Best regards,<br>
-                <strong>Event Team</strong></p>
+                <!-- Important Notes -->
+                <div class="notes-section">
+                    <div class="notes-title">📋 Important Notes</div>
+                    <ul>
+                        <li>Please arrive 30 minutes early</li>
+                        {'<li>Ensure each team member has their individual QR code</li>' if is_bulk else '<li>Screenshots of the QR code are acceptable</li>'}
+                        <li>Bring a valid ID proof</li>
+                        {'<li>Check the attached PDF for all team tickets</li>' if is_bulk else '<li>Keep the QR code safe - it is your entry pass!</li>'}
+                    </ul>
+                </div>
             </div>
+            
+            <!-- Footer -->
             <div class="footer">
-                <p>This is an automated message. Please do not reply to this email.</p>
+                <div class="footer-brand">EventTickets</div>
+                <div class="footer-tagline">Your vision, our platform, unforgettable events.</div>
+                <div class="footer-contact">
+                    Need help? Contact us at <a href="mailto:support@eventticketing.com">support@eventticketing.com</a><br>
+                    © 2025 EventTickets. All rights reserved.
+                </div>
             </div>
         </div>
     </body>
     </html>
     """
     
-    # Determine which attachments to use
+    # Encode QR code to base64 and embed inline
+    qr_base64 = None
+    if qr_code_path:
+        qr_base64 = await get_base64_image(qr_code_path)
+    elif is_bulk and qr_code_paths and len(qr_code_paths) > 0:
+        # Use first QR for preview in email body
+        qr_base64 = await get_base64_image(qr_code_paths[0])
+    
+    # Replace placeholder with actual base64 QR code or fallback message
+    if qr_base64:
+        html_body = html_body.replace('QR_CODE_PLACEHOLDER', qr_base64)
+    else:
+        html_body = html_body.replace('<img src="QR_CODE_PLACEHOLDER"', '<div style="color: #666; font-size: 14px;">[QR Code will be attached]</div><img style="display:none;" src=""')
+    
+    # Still attach QR codes for download (especially for bulk)
+    attachments = []
     if is_bulk and qr_code_paths:
-        # Multiple QR codes for bulk registration
         attachments = qr_code_paths
     elif qr_code_path:
-        # Single QR code for individual registration
         attachments = [qr_code_path]
-    else:
-        attachments = []
     
     return await send_email_with_attachments(to_email, subject, html_body, attachments)
 

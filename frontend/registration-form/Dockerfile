@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-alpine3.21 AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,14 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:alpine3.21
+
+# Security: Fix critical vulnerabilities
+# - libxml2: CVE-2025-XXXXX (CVSS 9.1) - Critical
+# - libpng: Multiple CVEs (CVSS 7.1, 6.1) - High/Medium
+# - libavif: CVE-2025-48175, CVE-2025-48174 (CVSS 4.5) - Medium
+# - curl: CVE-2025-10966 (CVSS 4.3) - Medium
+RUN apk upgrade --no-cache --available libxml2 libpng libavif curl
 
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html

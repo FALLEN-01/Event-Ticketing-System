@@ -2,7 +2,6 @@
 import { useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Calendar, Ticket, Users, User, ClipboardCheck, CreditCard, CheckCircle, Shield, Settings, FileText, LogOut, Bell } from 'lucide-react'
 import DashboardOverview from '../components/DashboardOverview'
-import EventsManagement from '../components/EventsManagement'
 import TicketsManagement from '../components/TicketsManagement'
 import ParticipantsManagement from '../components/ParticipantsManagement'
 import AttendanceTracking from '../components/AttendanceTracking'
@@ -62,17 +61,6 @@ function Dashboard() {
               >
                 <LayoutDashboard size={18} className="flex-shrink-0" />
                 <span>Dashboard</span>
-              </button>
-              <button 
-                onClick={() => setActiveTab("events")}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
-                  activeTab === "events" 
-                    ? "bg-white/20 text-white font-medium" 
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Calendar size={18} className="flex-shrink-0" />
-                <span>Events</span>
               </button>
               <button 
                 onClick={() => setActiveTab("tickets")}
@@ -191,7 +179,6 @@ function Dashboard() {
 
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'dashboard' && <DashboardOverview />}
-            {activeTab === 'events' && <EventsManagement />}
             {activeTab === 'tickets' && <TicketsManagement />}
             {activeTab === 'participants' && <ParticipantsManagement />}
             {activeTab === 'attendance' && <AttendanceTracking />}

@@ -1,0 +1,11 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#faf5ff"/>
+  <text x="200" y="180" font-size="20" text-anchor="middle" fill="#7c3aed">Bulk/Team Payment QR</text>
+  <text x="200" y="220" font-size="16" text-anchor="middle" fill="#a78bfa">Replace this with</text>
+  <text x="200" y="245" font-size="16" text-anchor="middle" fill="#a78bfa">your actual QR code</text>
+</svg>
+</body>
+</html>

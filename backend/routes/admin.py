@@ -32,6 +32,7 @@ class LoginResponse(BaseModel):
 
 class RegistrationSummary(BaseModel):
     id: int
+    serial_code: str
     name: str
     email: str
     phone: str
@@ -153,6 +154,7 @@ async def get_all_registrations(
         registrations=[
             RegistrationSummary(
                 id=reg.id,
+                serial_code=f"REG-{reg.id:06d}",  # Generate registration serial code
                 name=reg.name,
                 email=reg.email,
                 phone=reg.phone,
@@ -212,6 +214,7 @@ async def get_registration_detail(
     
     return {
         "id": registration.id,
+        "serial_code": f"REG-{registration.id:06d}",  # Generate registration serial code
         "name": registration.name,
         "email": registration.email,
         "phone": registration.phone,
@@ -298,7 +301,7 @@ async def approve_registration(
         # Generate QR codes for all tickets
         qr_code_paths = []
         for ticket in tickets:
-            qr_code_path = generate_ticket_qr(
+            qr_code_path = await generate_ticket_qr(
                 serial_code=ticket.serial_code,
                 name=ticket.member_name,
                 email=registration.email
@@ -363,6 +366,10 @@ async def approve_registration(
         
     except Exception as e:
         db.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in approve_registration: {str(e)}")
+        print(f"Traceback: {error_details}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to approve registration: {str(e)}"

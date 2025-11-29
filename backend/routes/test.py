@@ -1,11 +1,14 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form
+from fastapi import APIRouter, File, UploadFile, HTTPException, Form, Depends
 from typing import Optional
+from sqlalchemy.orm import Session
 from utils.storage import upload_payment_screenshot, upload_qr_code
 from utils.email import (
     send_approval_email, 
     send_rejection_email, 
     send_pending_confirmation_email
 )
+from database import get_db
+from models.registration import Registration, Ticket
 import os
 from datetime import datetime
 
@@ -21,142 +24,6 @@ async def test_root():
         "status": "ok",
         "message": "Test API is working!",
         "timestamp": datetime.utcnow().isoformat()
-    }
-
-
-@router.post("/upload")
-async def test_file_upload(file: UploadFile = File(...)):
-    """
-    Test endpoint to verify Cloudinary file upload is working
-    Upload any image file to test the integration
-    
-    Returns the Cloudinary URL of the uploaded file
-    """
-    try:
-        # Validate file type
-        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-        if file.content_type not in allowed_types:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file type '{file.content_type}'. Allowed: {', '.join(allowed_types)}"
-            )
-        
-        # Check file size (max 10MB for testing)
-        file_content = await file.read()
-        file_size_mb = len(file_content) / (1024 * 1024)
-        
-        if file_size_mb > 10:
-            raise HTTPException(
-                status_code=400,
-                detail=f"File too large: {file_size_mb:.2f}MB. Maximum allowed: 10MB"
-            )
-        
-        # Upload to Cloudinary
-        file_url = await upload_payment_screenshot(file_content, file.filename)
-        
-        if not file_url:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to upload file to Cloudinary. Check your credentials in .env file."
-            )
-        
-        return {
-            "success": True,
-            "message": "File uploaded successfully to Cloudinary! ✅",
-            "data": {
-                "file_url": file_url,
-                "filename": file.filename,
-                "content_type": file.content_type,
-                "size_bytes": len(file_content),
-                "size_mb": round(file_size_mb, 2)
-            },
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Upload failed: {str(e)}"
-        )
-
-
-@router.post("/upload-with-data")
-async def test_upload_with_form_data(
-    name: str = Form(...),
-    email: str = Form(...),
-    file: UploadFile = File(...)
-):
-    """
-    Test endpoint to simulate the registration form upload
-    Accepts form data along with file upload
-    """
-    try:
-        # Validate inputs
-        if not name or len(name.strip()) < 2:
-            raise HTTPException(status_code=400, detail="Name must be at least 2 characters")
-        
-        if '@' not in email:
-            raise HTTPException(status_code=400, detail="Invalid email format")
-        
-        # Validate file
-        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-        if file.content_type not in allowed_types:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}"
-            )
-        
-        # Upload file
-        file_content = await file.read()
-        file_url = await upload_payment_screenshot(file_content, file.filename)
-        
-        if not file_url:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to upload file to Cloudinary"
-            )
-        
-        return {
-            "success": True,
-            "message": "Test registration with file upload successful!",
-            "data": {
-                "name": name,
-                "email": email,
-                "file_url": file_url,
-                "filename": file.filename,
-                "size_bytes": len(file_content)
-            },
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Test failed: {str(e)}"
-        )
-
-
-@router.get("/cloudinary-config")
-async def test_cloudinary_config():
-    """
-    Test endpoint to check if Cloudinary is configured
-    (Does not expose secrets, only checks if they exist)
-    """
-    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
-    api_key = os.getenv("CLOUDINARY_API_KEY")
-    api_secret = os.getenv("CLOUDINARY_API_SECRET")
-    
-    return {
-        "cloudinary_configured": bool(cloud_name and api_key and api_secret),
-        "cloud_name_set": bool(cloud_name),
-        "api_key_set": bool(api_key),
-        "api_secret_set": bool(api_secret),
-        "cloud_name": cloud_name if cloud_name else "NOT SET",
-        "message": "✅ Cloudinary is properly configured!" if (cloud_name and api_key and api_secret) else "❌ Cloudinary configuration incomplete. Check your .env file."
     }
 
 
@@ -184,40 +51,6 @@ async def test_database_connection():
             "success": False,
             "message": f"❌ Database connection failed: {str(e)}"
         }
-
-
-@router.get("/env-check")
-async def test_environment_variables():
-    """
-    Check if all required environment variables are set
-    """
-    required_vars = [
-        "DATABASE_URL",
-        "CLOUDINARY_CLOUD_NAME",
-        "CLOUDINARY_API_KEY",
-        "CLOUDINARY_API_SECRET",
-        "SUPABASE_URL",
-        "SUPABASE_KEY"
-    ]
-    
-    results = {}
-    all_set = True
-    
-    for var in required_vars:
-        value = os.getenv(var)
-        is_set = bool(value)
-        results[var] = {
-            "set": is_set,
-            "value_preview": value[:20] + "..." if (value and len(value) > 20) else value if value else "NOT SET"
-        }
-        if not is_set:
-            all_set = False
-    
-    return {
-        "all_required_vars_set": all_set,
-        "variables": results,
-        "message": "✅ All environment variables are set!" if all_set else "⚠️ Some environment variables are missing. Check your .env file."
-    }
 
 
 @router.post("/send-test-email")
@@ -307,28 +140,190 @@ async def test_send_email(
         )
 
 
-@router.get("/smtp-config")
-async def test_smtp_config():
+@router.get("/list-registrations")
+async def list_registrations(db: Session = Depends(get_db)):
     """
-    Test endpoint to check if SMTP/Email is configured
-    (Does not expose secrets, only checks if they exist)
-    """
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = os.getenv("SMTP_PORT")
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    from_email = os.getenv("FROM_EMAIL")
-    from_name = os.getenv("FROM_NAME")
+    Test endpoint to list all registrations with their serial codes
     
-    return {
-        "smtp_configured": bool(smtp_user and smtp_password),
-        "smtp_host": smtp_host or "smtp.gmail.com (default)",
-        "smtp_port": smtp_port or "587 (default)",
-        "smtp_user_set": bool(smtp_user),
-        "smtp_password_set": bool(smtp_password),
-        "smtp_user": smtp_user if smtp_user else "NOT SET",
-        "from_email": from_email or smtp_user or "NOT SET",
-        "from_name": from_name or "Event Registration System (default)",
-        "message": "✅ SMTP is properly configured!" if (smtp_user and smtp_password) else "❌ SMTP configuration incomplete. Set SMTP_USER and SMTP_PASSWORD in environment variables."
-    }
+    Returns:
+        List of all registrations with basic info
+    """
+    try:
+        registrations = db.query(Registration).all()
+        
+        result = []
+        for reg in registrations:
+            ticket_count = db.query(Ticket).filter(Ticket.registration_id == reg.id).count()
+            result.append({
+                "id": reg.id,
+                "serial_code": reg.serial_code,
+                "name": reg.name,
+                "email": reg.email,
+                "status": reg.payment_status,
+                "payment_type": reg.payment_type,
+                "ticket_count": ticket_count,
+                "created_at": reg.created_at.isoformat() if reg.created_at else None
+            })
+        
+        return {
+            "success": True,
+            "total": len(result),
+            "registrations": result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list registrations: {str(e)}"
+        )
+
+
+@router.get("/list-tickets")
+async def list_tickets(db: Session = Depends(get_db)):
+    """
+    Test endpoint to list all tickets with their serial codes
+    
+    Returns:
+        List of all tickets with basic info
+    """
+    try:
+        tickets = db.query(Ticket).all()
+        
+        result = []
+        for ticket in tickets:
+            registration = db.query(Registration).filter(Registration.id == ticket.registration_id).first()
+            result.append({
+                "id": ticket.id,
+                "serial_code": ticket.serial_code,
+                "name": ticket.name,
+                "email": ticket.email,
+                "registration_serial": registration.serial_code if registration else None,
+                "qr_code_path": ticket.qr_code_path,
+                "created_at": ticket.created_at.isoformat() if ticket.created_at else None
+            })
+        
+        return {
+            "success": True,
+            "total": len(result),
+            "tickets": result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list tickets: {str(e)}"
+        )
+
+
+@router.delete("/delete-ticket/{serial_code}")
+async def delete_ticket(serial_code: str, db: Session = Depends(get_db)):
+    """
+    Test endpoint to delete a specific ticket by serial code
+    
+    Args:
+        serial_code: Serial code of the ticket to delete (e.g., EVT25-000003)
+    
+    Returns:
+        Success/failure message
+    """
+    try:
+        ticket = db.query(Ticket).filter(Ticket.serial_code == serial_code).first()
+        
+        if not ticket:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Ticket with serial code {serial_code} not found"
+            )
+        
+        ticket_id = ticket.id
+        db.delete(ticket)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"✅ Ticket {serial_code} deleted successfully!",
+            "deleted_ticket": {
+                "id": ticket_id,
+                "serial_code": serial_code
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete ticket: {str(e)}"
+        )
+
+
+@router.delete("/delete-registration/{serial_code}")
+async def delete_registration(serial_code: str, db: Session = Depends(get_db)):
+    """
+    Test endpoint to delete a registration and all associated tickets
+    
+    Args:
+        serial_code: Serial code of the registration to delete (e.g., REG-000001)
+    
+    Returns:
+        Success/failure message with count of deleted tickets
+    """
+    try:
+        # Extract registration ID from serial code (REG-000001 -> 1)
+        try:
+            reg_id = int(serial_code.split('-')[1])
+        except (IndexError, ValueError):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid serial code format. Expected REG-XXXXXX, got {serial_code}"
+            )
+        
+        registration = db.query(Registration).filter(Registration.id == reg_id).first()
+        
+        if not registration:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Registration with serial code {serial_code} not found"
+            )
+        
+        # Count associated tickets before deletion
+        registration_id = registration.id
+        tickets = db.query(Ticket).filter(Ticket.registration_id == registration_id).all()
+        ticket_count = len(tickets)
+        name = registration.name
+        
+        # Delete all associated tickets first (cascade should handle this, but being explicit)
+        for ticket in tickets:
+            db.delete(ticket)
+        
+        # Delete registration
+        db.delete(registration)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"✅ Registration {serial_code} and {ticket_count} associated ticket(s) deleted successfully!",
+            "deleted_registration": {
+                "id": registration_id,
+                "serial_code": serial_code,
+                "name": name,
+                "tickets_deleted": ticket_count
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete registration: {str(e)}"
+        )
+
+
 

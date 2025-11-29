@@ -15,6 +15,12 @@ function App() {
   const [paymentScreenshot, setPaymentScreenshot] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [notification, setNotification] = useState(null)
+
+  const showNotification = (text, type = 'success') => {
+    setNotification({ text, type })
+    setTimeout(() => setNotification(null), 4000)
+  }
 
   const handleInputChange = (e) => {
     setFormData({
@@ -150,21 +156,12 @@ function App() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: 'Registration submitted successfully! Your payment is under review. Tickets will be emailed soon.'
-        })
+        showNotification('Registration submitted successfully! Your payment is under review. Tickets will be emailed soon.', 'success')
       } else {
-        setMessage({
-          type: 'error',
-          text: data.detail || 'Registration failed. Please try again.'
-        })
+        showNotification(data.detail || 'Registration failed. Please try again.', 'error')
       }
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: 'Network error. Please check your connection and try again.'
-      })
+      showNotification('Network error. Please check your connection and try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -328,8 +325,32 @@ function App() {
   const renderStep2 = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Payment Confirmation</h2>
-        <p style={{ color: '#4b5563' }}>Upload your payment screenshot</p>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>Payment</h2>
+        <p style={{ color: '#4b5563' }}>Scan QR code to pay, then upload screenshot</p>
+      </div>
+
+      {/* UPI QR Code Section */}
+      <div style={{ background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)', borderRadius: '12px', padding: '1.5rem', border: '2px solid #e9d5ff' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#1f2937', marginBottom: '1rem', textAlign: 'center' }}>Scan to Pay via UPI</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', border: '3px solid #c4b5fd' }}>
+            <img 
+              src={paymentType === 'bulk' ? '/payment-qr/bulk-qr.svg' : '/payment-qr/individual-qr.svg'}
+              alt={`${paymentType === 'bulk' ? 'Bulk/Team' : 'Individual'} Payment QR Code`}
+              style={{ width: '250px', height: '250px', display: 'block', objectFit: 'contain' }}
+              onError={(e) => {
+                // Fallback if custom QR not found
+                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=yourupiid@bank&pn=EventName&am=${paymentType === 'bulk' ? '2000' : '500'}&cu=INR`
+              }}
+            />
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Scan with any UPI app</p>
+          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#7c3aed' }}>
+            {paymentType === 'bulk' ? 'Bulk Registration (Team of 4)' : 'Individual Registration'}
+          </p>
+        </div>
       </div>
 
       <div>
@@ -422,6 +443,34 @@ function App() {
 
   return (
     <div>
+      {/* Custom Notification Toast */}
+      {notification && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 9999,
+          padding: '1rem 1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          backdropFilter: 'blur(10px)',
+          background: notification.type === 'success' ? 'rgba(34, 197, 94, 0.95)' : 'rgba(239, 68, 68, 0.95)',
+          border: `2px solid ${notification.type === 'success' ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          animation: 'slideIn 0.3s ease-out',
+          minWidth: '300px'
+        }}>
+          <span style={{ fontSize: '1.25rem' }}>
+            {notification.type === 'success' ? '✅' : '❌'}
+          </span>
+          <span style={{ color: 'white', fontWeight: '600', fontSize: '0.95rem' }}>
+            {notification.text}
+          </span>
+        </div>
+      )}
+      
       {/* Decorative circles */}
       <div className="decorative-circle-1"></div>
       <div className="decorative-circle-2"></div>
@@ -437,16 +486,6 @@ function App() {
 
           {/* Step Indicator */}
           {renderStepIndicator()}
-
-          {/* Alert Messages */}
-          {message.text && (
-            <div className={message.type === 'success' ? 'alert-success' : 'alert-error'}>
-              <span style={{ fontSize: '1.25rem' }}>
-                {message.type === 'success' ? '✅' : '⚠️'}
-              </span>
-              <span style={{ fontWeight: '500' }}>{message.text}</span>
-            </div>
-          )}
 
           {/* Step Content */}
           {currentStep === 1 && renderStep1()}

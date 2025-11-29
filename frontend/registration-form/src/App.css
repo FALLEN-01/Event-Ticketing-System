@@ -313,6 +313,17 @@ input[type="file"] {
   to { transform: rotate(360deg); }
 }
 
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Light Purple/Lavender Theme Specific Styles */
 .form-container {
   background: white;
@@ -323,7 +334,7 @@ input[type="file"] {
   width: 100%;
   position: relative;
   z-index: 10;
-  min-height: 580px;
+  min-height: 650px;
 }
 
 @media (max-width: 640px) {

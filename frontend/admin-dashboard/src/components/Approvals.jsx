@@ -8,6 +8,7 @@ function Approvals() {
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [rejectReason, setRejectReason] = useState('')
+  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     fetchRegistrations()
@@ -25,15 +26,25 @@ function Approvals() {
     }
   }
 
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
+
   const handleApprove = async (regId) => {
     try {
       await axiosInstance.post(`/admin/registrations/${regId}/approve`)
-      alert('Registration approved successfully!')
-      fetchRegistrations()
+      showNotification('Registration approved successfully!', 'success')
+      
+      // Update the registrations list immediately
+      setRegistrations(prevRegs => prevRegs.filter(reg => reg.id !== regId))
       setSelectedReg(null)
+      
+      // Fetch updated data in background
+      fetchRegistrations()
     } catch (error) {
       console.error('Failed to approve:', error)
-      alert('Failed to approve registration')
+      showNotification('Failed to approve registration', 'error')
     }
   }
 
@@ -42,13 +53,18 @@ function Approvals() {
       await axiosInstance.post(`/admin/registrations/${regId}/reject`, {
         reason: rejectReason || 'Payment verification failed'
       })
-      alert('Registration rejected')
-      fetchRegistrations()
+      showNotification('Registration rejected', 'success')
+      
+      // Update the registrations list immediately
+      setRegistrations(prevRegs => prevRegs.filter(reg => reg.id !== regId))
       setSelectedReg(null)
       setRejectReason('')
+      
+      // Fetch updated data in background
+      fetchRegistrations()
     } catch (error) {
       console.error('Failed to reject:', error)
-      alert('Failed to reject registration')
+      showNotification('Failed to reject registration', 'error')
     }
   }
 
@@ -63,13 +79,31 @@ function Approvals() {
 
   return (
     <div className="space-y-6">
+      {/* Custom Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg backdrop-blur-md animate-slide-in ${
+          notification.type === 'success' 
+            ? 'bg-green-500/90 border border-green-400' 
+            : 'bg-red-500/90 border border-red-400'
+        }`}>
+          <div className="flex items-center gap-3">
+            {notification.type === 'success' ? (
+              <CheckCircle size={20} className="text-white" />
+            ) : (
+              <XCircle size={20} className="text-white" />
+            )}
+            <span className="text-white font-medium">{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-2xl font-bold text-white">Payment Approvals</h2>
 
-      {/* Two-Pane Split Layout */}
-      <div className="grid md:grid-cols-2 gap-4 h-[calc(100vh-200px)]">
+      {/* Two-Pane Split Layout - 30:70 ratio */}
+      <div className="flex gap-4 h-[calc(100vh-200px)]">
         
-        {/* LEFT PANE: Registrations List */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden flex flex-col">
+        {/* LEFT PANE: Registrations List - 30% */}
+        <div className="w-[30%] bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden flex flex-col">
           {/* Filter Tabs */}
           <div className="p-4 border-b border-white/10">
             <div className="flex gap-2">
@@ -133,7 +167,7 @@ function Approvals() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-medium">#{reg.id} - {reg.name}</span>
+                      <span className="text-white font-medium">{reg.name}</span>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         reg.status === 'approved' ? 'bg-green-500/20 text-green-300' :
                         reg.status === 'rejected' ? 'bg-red-500/20 text-red-300' :
@@ -142,6 +176,7 @@ function Approvals() {
                         {reg.status}
                       </span>
                     </div>
+                    <p className="text-white/80 text-sm font-mono">{reg.serial_code}</p>
                     <p className="text-white/60 text-sm">{reg.email}</p>
                     <p className="text-white/60 text-xs mt-1 capitalize">{reg.payment_type}</p>
                   </button>
@@ -151,16 +186,17 @@ function Approvals() {
           </div>
         </div>
 
-        {/* RIGHT PANE: Screenshot Preview */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden flex flex-col">
+        {/* RIGHT PANE: Screenshot Preview - 70% */}
+        <div className="w-[70%] bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden flex flex-col">
           {selectedReg ? (
             <>
               {/* Header */}
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Registration #{selectedReg.id}</h3>
-                    <p className="text-white/60 text-sm">{selectedReg.name}</p>
+                    <h3 className="text-lg font-semibold text-white">{selectedReg.name}</h3>
+                    <p className="text-white/80 text-sm font-mono">{selectedReg.serial_code}</p>
+                    <p className="text-white/60 text-xs">{selectedReg.email}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     selectedReg.payment?.status === 'approved' ? 'bg-green-500/20 text-green-300' :
@@ -177,8 +213,16 @@ function Approvals() {
                 <div className="space-y-4">
                   {/* User Details */}
                   <div className="bg-white/5 rounded-lg p-4">
-                    <h4 className="text-white font-medium mb-3">User Details</h4>
+                    <h4 className="text-white font-medium mb-3">Registration Details</h4>
                     <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Registration ID:</span>
+                        <span className="text-white font-mono font-bold">{selectedReg.serial_code}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Name:</span>
+                        <span className="text-white">{selectedReg.name}</span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-white/60">Email:</span>
                         <span className="text-white">{selectedReg.email}</span>
@@ -201,6 +245,18 @@ function Approvals() {
                         <span className="text-white/60">Tickets:</span>
                         <span className="text-white">{selectedReg.tickets_count || 0}</span>
                       </div>
+                      {selectedReg.payment?.amount && (
+                        <div className="flex justify-between">
+                          <span className="text-white/60">Amount:</span>
+                          <span className="text-white font-semibold">₹{selectedReg.payment.amount}</span>
+                        </div>
+                      )}
+                      {selectedReg.payment?.payment_method && (
+                        <div className="flex justify-between">
+                          <span className="text-white/60">Payment Method:</span>
+                          <span className="text-white capitalize">{selectedReg.payment.payment_method}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-white/60">Submitted:</span>
                         <span className="text-white">{new Date(selectedReg.created_at).toLocaleString()}</span>

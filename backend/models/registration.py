@@ -250,14 +250,18 @@ class Admin(Base):
         """Verify password against hash"""
         from passlib.context import CryptContext
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        return pwd_context.verify(password, self.password_hash)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        password_bytes = password.encode('utf-8')[:72]
+        return pwd_context.verify(password_bytes, self.password_hash)
     
     @staticmethod
     def hash_password(password: str) -> str:
         """Hash password"""
         from passlib.context import CryptContext
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        return pwd_context.hash(password)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        password_bytes = password.encode('utf-8')[:72]
+        return pwd_context.hash(password_bytes)
 
 
 # ==================== TABLE 7: AUDIT_LOGS ====================
