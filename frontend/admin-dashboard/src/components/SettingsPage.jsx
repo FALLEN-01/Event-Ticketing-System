@@ -5,7 +5,8 @@ import axiosInstance from '../config'
 function SettingsPage() {
   const [settings, setSettings] = useState({
     // Event Details
-    event_name: 'IEEE YESS\'25',
+    event_name: 'Event',
+    event_type: 'Conference',
     event_date: '2025-09-20',
     event_time: '09:00',
     event_venue: 'Offline',
@@ -19,7 +20,6 @@ function SettingsPage() {
     
     // Payment
     upi_id: 'yourupiid@bank',
-    payment_instructions: '1. Scan the QR code\n2. Complete payment using UPI\n3. Take a screenshot\n4. Upload screenshot in registration form',
     
     // Organization
     organization_name: 'Event Ticketing System',
@@ -27,10 +27,19 @@ function SettingsPage() {
     
     // Email
     approval_email_subject: '🎉 Registration Confirmed!',
-    rejection_email_subject: '❌ Payment Verification Issue'
+    rejection_email_subject: '❌ Payment Verification Issue',
+    
+    // QR Codes
+    individual_qr_code: null,
+    bulk_qr_code: null
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingQR, setUploadingQR] = useState(false)
+  const [qrPreviews, setQrPreviews] = useState({
+    individual: null,
+    bulk: null
+  })
 
   useEffect(() => {
     fetchSettings()
@@ -49,6 +58,48 @@ function SettingsPage() {
 
   const handleChange = (field, value) => {
     setSettings(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleQRUpload = async (qrType, file) => {
+    if (!file) return
+    
+    try {
+      setUploadingQR(true)
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await axiosInstance.post(`/admin/settings/upload-qr/${qrType}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      // Update preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setQrPreviews(prev => ({
+          ...prev,
+          [qrType]: reader.result
+        }))
+      }
+      reader.readAsDataURL(file)
+      
+      // Update settings with QR URL
+      setSettings(prev => ({
+        ...prev,
+        [`${qrType}_qr_code`]: response.data.url
+      }))
+      
+      alert(`${qrType === 'individual' ? 'Individual' : 'Bulk'} QR code uploaded successfully!`)
+      
+      // Refresh settings to get updated data
+      fetchSettings()
+    } catch (error) {
+      console.error('Failed to upload QR code:', error)
+      alert('Failed to upload QR code: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setUploadingQR(false)
+    }
   }
 
   const handleSave = async () => {
@@ -102,6 +153,18 @@ function SettingsPage() {
               onChange={(e) => handleChange('event_name', e.target.value)}
               className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white"
             />
+          </div>
+
+          <div>
+            <label className="text-white/70 text-sm mb-2 block">Event Type</label>
+            <input 
+              type="text" 
+              value={settings.event_type}
+              onChange={(e) => handleChange('event_type', e.target.value)}
+              placeholder="e.g., Conference, Workshop, Hackathon, Seminar"
+              className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white"
+            />
+            <p className="text-white/50 text-xs mt-1">Type any event category that fits your event</p>
           </div>
 
           <div>
@@ -221,51 +284,82 @@ function SettingsPage() {
             <p className="text-white/50 text-xs mt-1">This will be used to generate payment QR codes</p>
           </div>
 
-          <div>
-            <label className="text-white/70 text-sm mb-2 block">Payment Instructions</label>
-            <textarea 
-              rows="4" 
-              value={settings.payment_instructions}
-              onChange={(e) => handleChange('payment_instructions', e.target.value)}
-              className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white"
-            ></textarea>
-          </div>
-
           <div className="col-span-2 border-t border-white/20 pt-4">
             <h4 className="text-white font-semibold mb-3">Payment QR Codes</h4>
             <p className="text-white/60 text-sm mb-4">Upload separate QR codes for individual and bulk registrations</p>
             
             <div className="grid md:grid-cols-2 gap-4">
+              {/* Individual QR Upload */}
               <div>
                 <label className="text-white/70 text-sm mb-2 block">Individual Payment QR</label>
-                <div className="bg-white/5 border border-white/20 rounded-lg p-4 text-center">
-                  <Upload size={32} className="text-white/40 mx-auto mb-2" />
-                  <p className="text-white/60 text-xs mb-2">Upload to:</p>
-                  <code className="text-white/80 text-xs bg-black/20 px-2 py-1 rounded">
-                    frontend/registration-form/public/payment-qr/individual-qr.png
-                  </code>
-                  <p className="text-white/50 text-xs mt-2">Rebuild container after upload</p>
+                <div className="bg-white/5 border border-white/20 rounded-lg p-4">
+                  {qrPreviews.individual || settings.individual_qr_code ? (
+                    <div className="space-y-3">
+                      <img 
+                        src={qrPreviews.individual || settings.individual_qr_code} 
+                        alt="Individual QR Preview"
+                        className="w-32 h-32 mx-auto object-contain bg-white rounded"
+                      />
+                      <p className="text-white/60 text-xs text-center">QR Code Uploaded</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Upload size={32} className="text-white/40 mx-auto mb-2" />
+                      <p className="text-white/60 text-xs">Click to upload QR code</p>
+                    </div>
+                  )}
+                  
+                  <input
+                    type="file"
+                    id="individual-qr-upload"
+                    accept="image/*"
+                    onChange={(e) => handleQRUpload('individual', e.target.files[0])}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="individual-qr-upload"
+                    className={`block mt-3 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/40 rounded-lg text-white text-sm text-center cursor-pointer transition-colors ${uploadingQR ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {uploadingQR ? 'Uploading...' : 'Upload QR Code'}
+                  </label>
                 </div>
               </div>
 
+              {/* Bulk QR Upload */}
               <div>
                 <label className="text-white/70 text-sm mb-2 block">Bulk/Team Payment QR</label>
-                <div className="bg-white/5 border border-white/20 rounded-lg p-4 text-center">
-                  <Upload size={32} className="text-white/40 mx-auto mb-2" />
-                  <p className="text-white/60 text-xs mb-2">Upload to:</p>
-                  <code className="text-white/80 text-xs bg-black/20 px-2 py-1 rounded">
-                    frontend/registration-form/public/payment-qr/bulk-qr.png
-                  </code>
-                  <p className="text-white/50 text-xs mt-2">Rebuild container after upload</p>
+                <div className="bg-white/5 border border-white/20 rounded-lg p-4">
+                  {qrPreviews.bulk || settings.bulk_qr_code ? (
+                    <div className="space-y-3">
+                      <img 
+                        src={qrPreviews.bulk || settings.bulk_qr_code} 
+                        alt="Bulk QR Preview"
+                        className="w-32 h-32 mx-auto object-contain bg-white rounded"
+                      />
+                      <p className="text-white/60 text-xs text-center">QR Code Uploaded</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Upload size={32} className="text-white/40 mx-auto mb-2" />
+                      <p className="text-white/60 text-xs">Click to upload QR code</p>
+                    </div>
+                  )}
+                  
+                  <input
+                    type="file"
+                    id="bulk-qr-upload"
+                    accept="image/*"
+                    onChange={(e) => handleQRUpload('bulk', e.target.files[0])}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="bulk-qr-upload"
+                    className={`block mt-3 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/40 rounded-lg text-white text-sm text-center cursor-pointer transition-colors ${uploadingQR ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {uploadingQR ? 'Uploading...' : 'Upload QR Code'}
+                  </label>
                 </div>
               </div>
-            </div>
-            
-            <div className="mt-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-yellow-200 text-xs">
-                <strong>Note:</strong> Replace the placeholder SVG files with your actual QR code images (PNG/JPG recommended). 
-                After uploading, run: <code className="bg-black/20 px-1 rounded">docker-compose up -d --build registration-form</code>
-              </p>
             </div>
           </div>
         </div>

@@ -33,6 +33,7 @@ class MessageType(str, enum.Enum):
 
 class AdminRole(str, enum.Enum):
     SUPERADMIN = "superadmin"
+    STAFF = "staff"
     REVIEWER = "reviewer"
 
 
@@ -84,7 +85,6 @@ class Payment(Base):
     payment_screenshot = Column(String(500), nullable=True)  # Supabase Storage URL
     amount = Column(DECIMAL(10, 2), nullable=True)  # Payment amount
     payment_method = Column(String(50), nullable=True)  # UPI, Card, etc.
-    payment_type = Column(Enum(PaymentType), default=PaymentType.INDIVIDUAL, nullable=False)
     
     # Approval Status
     status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False)
@@ -269,6 +269,17 @@ class Admin(Base):
 class AuditLog(Base):
     """
     Audit logs table - tracks admin actions for traceability
+    Actions tracked:
+    - LOGIN: Admin login
+    - LOGOUT: Admin logout
+    - PASSWORD_CHANGE: Password updated
+    - APPROVE_PAYMENT: Payment approved
+    - REJECT_PAYMENT: Payment rejected
+    - CREATE_ADMIN: New admin added
+    - UPDATE_ADMIN: Admin details modified
+    - DELETE_ADMIN: Admin removed
+    - UPDATE_SETTINGS: Event settings changed
+    - REGISTRATION_VIEW: Registration details viewed
     """
     __tablename__ = "audit_logs"
     
@@ -277,11 +288,15 @@ class AuditLog(Base):
     registration_id = Column(Integer, ForeignKey("registrations.id"), nullable=True)
     
     # Action Details
-    action = Column(String(255), nullable=False)  # e.g., "Approved Payment", "Rejected Ticket"
-    details = Column(Text, nullable=True)  # JSON or additional context
+    action = Column(String(255), nullable=False, index=True)  # Action type constant
+    details = Column(Text, nullable=True)  # JSON with additional context
+    
+    # Network Information
+    ip_address = Column(String(45), nullable=True)  # IPv4 or IPv6
+    user_agent = Column(String(500), nullable=True)  # Browser/device info (acts as MAC identifier)
     
     # Timestamp
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
     # Relationships
     admin = relationship("Admin", back_populates="audit_logs")

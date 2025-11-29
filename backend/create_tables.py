@@ -7,11 +7,21 @@ from models.registration import (
     Registration,
     Payment,
     Ticket,
+    Attendance,
     Message,
     Admin,
     AuditLog,
     AdminRole
 )
+from models.settings import (
+    Settings,
+    EventConfig,
+    PricingConfig,
+    PaymentConfig,
+    OrganizationConfig,
+    EmailTemplateConfig
+)
+from models.team_member import TeamMember
 
 def create_tables():
     """Create all database tables"""
@@ -28,13 +38,23 @@ def create_tables():
         Base.metadata.create_all(bind=engine)
         
         print("\n✅ Database tables created successfully!")
-        print("\n📋 Created tables:")
+        print("\n📋 Core Tables (Active):")
         print("  1. registrations - Main registration data")
-        print("  2. payments - Payment records with screenshot URLs")
-        print("  3. tickets - Generated QR code tickets")
-        print("  4. messages - Email/notification logs")
-        print("  5. admins - Admin user accounts")
-        print("  6. audit_logs - Admin action tracking")
+        print("  2. team_members - Team member details (normalized)")
+        print("  3. payments - Payment records (no redundant payment_type)")
+        print("  4. tickets - Generated QR code tickets")
+        print("  5. attendance - Check-in/check-out tracking")
+        print("  6. messages - Email/notification logs")
+        print("  7. admins - Admin user accounts")
+        print("  8. audit_logs - Admin action tracking")
+        print("  9. settings - Event configuration (legacy)")
+        print("\n📋 Normalized Config Tables (Future):")
+        print("  10. event_config - Event-specific settings")
+        print("  11. pricing_config - Pricing configuration")
+        print("  12. payment_config - Payment method settings")
+        print("  13. organization_config - Organization details")
+        print("  14. email_template_config - Email template settings")
+        print("\n✨ Total: 14 tables (9 active + 5 normalized config tables)")
         
     except Exception as e:
         print(f"\n❌ Error creating tables: {str(e)}")

@@ -26,7 +26,7 @@ def get_event_settings() -> dict:
         if not settings:
             # Return defaults if no settings found
             return {
-                'event_name': "IEEE YESS'25",
+                'event_name': "Event",
                 'event_date': "20 September 2025",
                 'event_time': "09:00 am",
                 'event_venue': "Offline",

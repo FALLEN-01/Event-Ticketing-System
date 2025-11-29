@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
@@ -10,6 +10,7 @@ from database import get_db
 from models.registration import Registration, Payment, Ticket, Attendance, Message, PaymentStatus, PaymentType, MessageType, Admin
 from utils.qr_generator import generate_ticket_qr
 from utils.email import send_approval_email, send_rejection_email
+from utils.audit import log_audit, AuditAction
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -69,6 +70,7 @@ class RegistrationsResponse(BaseModel):
 @router.post("/login", response_model=LoginResponse)
 async def admin_login(
     login_data: LoginRequest,
+    request: Request,
     response: Response,
     db: Session = Depends(get_db)
 ):
@@ -80,6 +82,24 @@ async def admin_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
+    
+    # Get client info
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent", None)
+    
+    # Log successful login
+    log_audit(
+        db=db,
+        admin_id=admin.id,
+        action=AuditAction.LOGIN,
+        details={"email": admin.email, "role": admin.role.value},
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
+    # Update last login
+    admin.last_login = datetime.utcnow()
+    db.commit()
     
     # Create access token
     expires = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
@@ -161,7 +181,7 @@ async def get_all_registrations(
                 team_name=reg.team_name,
                 members=reg.members,
                 status=payment.status.value,
-                payment_type=payment.payment_type.value,
+                payment_type=reg.payment_type.value,  # Use reg.payment_type, not payment.payment_type
                 payment_screenshot=payment.payment_screenshot,
                 tickets_count=db.query(Ticket).filter(Ticket.registration_id == reg.id).count(),
                 created_at=reg.created_at.isoformat()
@@ -258,6 +278,7 @@ async def get_statistics(db: Session = Depends(get_db)):
 @router.post("/registrations/{registration_id}/approve")
 async def approve_registration(
     registration_id: int,
+    request: Request,
     approved_by: str = "admin",
     db: Session = Depends(get_db)
 ):
@@ -317,6 +338,22 @@ async def approve_registration(
         payment.approved_at = datetime.utcnow()
         
         db.commit()
+        
+        # Log approval action
+        log_audit(
+            db=db,
+            admin_id=1,  # TODO: Get from JWT token
+            action=AuditAction.APPROVE_PAYMENT,
+            details={
+                "registration_id": registration_id,
+                "name": registration.name,
+                "email": registration.email,
+                "tickets_count": len(tickets)
+            },
+            registration_id=registration_id,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent", None)
+        )
         
         # Send approval email with all tickets
         email_sent = await send_approval_email(
@@ -380,6 +417,7 @@ async def approve_registration(
 async def reject_registration(
     registration_id: int,
     reject_data: RejectRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -414,6 +452,22 @@ async def reject_registration(
         payment.status = PaymentStatus.REJECTED
         payment.rejection_reason = reject_data.reason
         db.commit()
+        
+        # Log rejection action
+        log_audit(
+            db=db,
+            admin_id=1,  # TODO: Get from JWT token
+            action=AuditAction.REJECT_PAYMENT,
+            details={
+                "registration_id": registration_id,
+                "name": registration.name,
+                "email": registration.email,
+                "reason": reject_data.reason
+            },
+            registration_id=registration_id,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent", None)
+        )
         
         # Send rejection email
         email_sent = await send_rejection_email(

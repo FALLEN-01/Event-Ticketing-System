@@ -58,6 +58,10 @@ app.include_router(ticket.router)
 app.include_router(test.router)  # Test endpoints
 app.include_router(settings.router)  # Settings API
 
+# Import admin management router
+from routes import admin_management
+app.include_router(admin_management.router)  # Admin CRUD API
+
 
 @app.get("/")
 async def root():

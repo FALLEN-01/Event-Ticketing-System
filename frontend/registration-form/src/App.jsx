@@ -359,11 +359,11 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
           <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', border: '3px solid #c4b5fd' }}>
             <img 
-              src={paymentType === 'bulk' ? '/payment-qr/bulk-qr.svg' : '/payment-qr/individual-qr.svg'}
+              src={`${API_ENDPOINTS.BASE_URL}/admin/settings/qr/${paymentType === 'bulk' ? 'bulk' : 'individual'}`}
               alt={`${paymentType === 'bulk' ? 'Bulk/Team' : 'Individual'} Payment QR Code`}
               style={{ width: '250px', height: '250px', display: 'block', objectFit: 'contain' }}
               onError={(e) => {
-                // Fallback if custom QR not found
+                // Fallback to generated QR if custom QR not found
                 const amount = paymentType === 'bulk' ? settings.bulk_price : settings.individual_price
                 e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${settings.upi_id || 'yourupiid@bank'}&pn=${encodeURIComponent(settings.event_name || 'Event')}&am=${amount}&cu=${settings.currency}`
               }}
