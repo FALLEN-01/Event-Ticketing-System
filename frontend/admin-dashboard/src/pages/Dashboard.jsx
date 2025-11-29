@@ -153,7 +153,7 @@ function Dashboard() {
               </button>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 border-t border-white/10 pt-2">
               <button 
                 onClick={() => setActiveTab("settings")}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
@@ -167,7 +167,7 @@ function Dashboard() {
               </button>
               <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-white/80 hover:bg-white/10 hover:text-white transition-all"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-red-300 hover:bg-red-500/20 hover:text-red-200 transition-all"
               >
                 <LogOut size={18} className="flex-shrink-0" />
                 <span>Logout</span>

@@ -47,7 +47,7 @@ def create_admin_user():
         print("\n👤 Creating default admin user...")
         
         # Check if admin already exists
-        existing_admin = db.query(Admin).filter(Admin.email == "admin@event.com").first()
+        existing_admin = db.query(Admin).filter(Admin.email == "admin@gmail.com").first()
         
         if existing_admin:
             print("⚠️  Admin user already exists")
@@ -57,7 +57,7 @@ def create_admin_user():
         # Create new admin user
         admin = Admin(
             username="admin",
-            email="admin@event.com",
+            email="admin@gmail.com",
             password_hash=Admin.hash_password("admin123"),
             name="Admin User",
             role=AdminRole.SUPERADMIN,
@@ -87,6 +87,6 @@ if __name__ == "__main__":
     print("✅ Database setup complete!")
     print("="*50)
     print("\n🔐 Login credentials:")
-    print("   Email: admin@event.com")
+    print("   Email: admin@gmail.com")
     print("   Password: admin123")
     print()
