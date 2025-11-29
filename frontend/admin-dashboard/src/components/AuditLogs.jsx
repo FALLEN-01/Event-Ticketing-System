@@ -94,6 +94,83 @@ function AuditLogs() {
     }
   }
 
+  const formatDetails = (details, action) => {
+    if (!details || typeof details !== 'object') return details || '-'
+    
+    // Custom formatting based on action type
+    switch (action) {
+      case 'UPLOAD_QR':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">Type:</span> {details.qr_type}</div>
+            <div><span className="text-white/50">File:</span> {details.filename?.substring(0, 30)}...</div>
+            <div className="text-green-300">✓ Uploaded</div>
+          </div>
+        )
+      case 'NEW_REGISTRATION':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">Name:</span> {details.name}</div>
+            <div><span className="text-white/50">Email:</span> {details.email}</div>
+            <div><span className="text-white/50">Amount:</span> ₹{details.amount}</div>
+          </div>
+        )
+      case 'TICKET_CHECKIN':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">Ticket:</span> {details.serial_code}</div>
+            <div><span className="text-white/50">Name:</span> {details.member_name}</div>
+          </div>
+        )
+      case 'APPROVE_PAYMENT':
+      case 'REJECT_PAYMENT':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">User:</span> {details.name}</div>
+            <div><span className="text-white/50">Email:</span> {details.email}</div>
+            {details.reason && <div><span className="text-white/50">Reason:</span> {details.reason}</div>}
+          </div>
+        )
+      case 'SEND_APPROVAL_EMAIL':
+      case 'SEND_REJECTION_EMAIL':
+      case 'SEND_PENDING_EMAIL':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">To:</span> {details.email}</div>
+            {details.ticket_count && <div><span className="text-white/50">Tickets:</span> {details.ticket_count}</div>}
+          </div>
+        )
+      case 'CREATE_ADMIN':
+      case 'UPDATE_ADMIN':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">Email:</span> {details.email}</div>
+            <div><span className="text-white/50">Role:</span> {details.role}</div>
+          </div>
+        )
+      case 'LOGIN':
+        return (
+          <div className="text-xs space-y-1">
+            <div><span className="text-white/50">Email:</span> {details.email}</div>
+            <div><span className="text-white/50">Role:</span> {details.role}</div>
+          </div>
+        )
+      default:
+        // Show first 2 fields for other actions
+        const entries = Object.entries(details).slice(0, 2)
+        return (
+          <div className="text-xs space-y-1">
+            {entries.map(([key, value]) => (
+              <div key={key}>
+                <span className="text-white/50">{key}:</span> {String(value).substring(0, 40)}
+                {String(value).length > 40 ? '...' : ''}
+              </div>
+            ))}
+          </div>
+        )
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -194,17 +271,7 @@ function AuditLogs() {
                         <div className="text-white/50 text-xs">{log.admin_email}</div>
                       </td>
                       <td className="p-4 text-white/70 max-w-xs">
-                        {details && typeof details === 'object' ? (
-                          <div className="text-xs">
-                            {Object.entries(details).slice(0, 3).map(([key, value]) => (
-                              <div key={key}>
-                                <span className="text-white/50">{key}:</span> {String(value)}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-xs">{details || '-'}</span>
-                        )}
+                        {formatDetails(details, log.action)}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2 text-white/70">
