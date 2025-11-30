@@ -17,6 +17,8 @@ build/
 
 # Environment
 .env
+.cert
+
 
 # IDEs
 .vscode/
