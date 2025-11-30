@@ -1,66 +1,57 @@
-Custom Proprietary License
+MIT License with AI Training Prohibition
 
-Copyright (c) 2025 FALLEN-01. All rights reserved.
+Copyright (c) 2025 FALLEN-01
 
-TERMS AND CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-1. GRANT OF LICENSE
-   This software and associated documentation files (the "Software") are provided
-   under a restricted license. By accessing, downloading, or using the Software,
-   you agree to be bound by the terms of this license.
+1. ATTRIBUTION REQUIREMENT
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
 
-2. PERMITTED USES
-   Subject to the terms and conditions of this License, you are granted a limited,
-   non-exclusive, non-transferable, revocable license to:
-   - View the source code for educational and reference purposes only
-   - Use the Software for personal, non-commercial purposes
+2. OPEN SOURCE COMMITMENT
+   This Software is open source and free to use for:
+   - Personal projects
+   - Commercial applications
+   - Educational purposes
+   - Research and development
+   - Modification and distribution
+   - Private or public deployment
 
-3. RESTRICTIONS
-   You may NOT:
-   - Copy, modify, merge, publish, distribute, sublicense, or sell copies of the
-     Software without explicit written permission from the copyright holder
-   - Use the Software or any part thereof for commercial purposes
-   - Reverse engineer, decompile, or disassemble the Software
-   - Remove or alter any copyright notices or this license from the Software
-   - Use the Software in any manner that competes with the copyright holder's
-     business or projects
-
-4. AI TRAINING AND DATA MINING PROHIBITION
-   The Software, including but not limited to its source code, documentation,
-   algorithms, architecture, design patterns, and any other intellectual property
-   contained herein, is EXPRESSLY PROHIBITED from being used for:
+3. AI TRAINING AND DATA MINING PROHIBITION
+   ⚠️ STRICT RESTRICTION: The Software, including but not limited to its source code,
+   documentation, algorithms, architecture, design patterns, and any other intellectual
+   property contained herein, is EXPRESSLY PROHIBITED from being used for:
    
    a) Training artificial intelligence models, including but not limited to:
       - Machine learning models
       - Large Language Models (LLMs)
       - Neural networks
       - Deep learning systems
+      - Code generation models (GitHub Copilot, Amazon CodeWhisperer, etc.)
       - Any form of automated learning systems
    
    b) Data mining, scraping, or extraction for the purpose of:
       - Creating datasets for AI/ML training
       - Pattern analysis for AI development
-      - Code generation model training
-      - Any form of automated code analysis for AI purposes
+      - Automated code analysis for AI model improvement
+      - Building code completion or suggestion systems
    
    c) Inclusion in any training corpus, dataset, or knowledge base used for
       developing, training, fine-tuning, or improving AI systems
    
-   d) Any use by AI companies, research institutions, or individuals for the
-      purpose of advancing AI capabilities
+   d) Use by AI companies (OpenAI, Google, Anthropic, Microsoft, Meta, etc.),
+      research institutions, or individuals for advancing AI capabilities
    
    This prohibition applies to all current and future AI technologies, regardless
-   of whether they are developed by commercial entities, open-source projects,
-   academic institutions, or individual researchers.
+   of commercial or open-source status. This includes but is not limited to web
+   scraping bots, automated code harvesters, and AI training data collectors.
 
-5. ATTRIBUTION
-   If you reference or discuss this Software in any public forum, publication,
-   or presentation, you must:
-   - Provide clear attribution to the original author (FALLEN-01)
-   - Include a link to the original repository
-   - Clearly state that the Software is proprietary and not open source
-
-6. NO WARRANTY
+4. NO WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -69,35 +60,36 @@ TERMS AND CONDITIONS
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
 
-7. TERMINATION
-   This license is effective until terminated. Your rights under this license
-   will terminate automatically without notice if you fail to comply with any
-   term(s) of this license. Upon termination, you must destroy all copies of
-   the Software in your possession.
+5. ENFORCEMENT OF AI PROHIBITION
+   Violation of the AI Training Prohibition (Section 3) constitutes:
+   - Immediate and automatic termination of all rights under this license
+   - Material breach of license terms subject to legal action
+   - Potential claims for damages and injunctive relief
+   
+   Any entity found using this Software for AI training purposes forfeits all
+   rights to use, copy, modify, or distribute the Software, and must immediately
+   cease all such activities and destroy any derived datasets or models.
 
-8. ENFORCEMENT
-   Violation of any terms of this license may result in:
-   - Immediate termination of your license to use the Software
-   - Legal action seeking damages and injunctive relief
-   - Reporting to relevant platforms and authorities
+6. CONTACT & PERMISSIONS
+   For questions, permissions, or licensing inquiries:
+   - GitHub: @FALLEN-01
+   - Repository: https://github.com/FALLEN-01/Event-Ticketing-System
 
-9. CONTACT
-   For permissions beyond the scope of this license, including commercial use,
-   partnership opportunities, or licensing inquiries, please contact:
-   GitHub: @FALLEN-01
+7. SEVERABILITY
+   If any provision of this license is held to be unenforceable, the remaining
+   provisions shall continue in full force and effect. The AI Training Prohibition
+   (Section 3) is considered a material and inseverable term of this license.
 
-10. SEVERABILITY
-    If any provision of this license is held to be unenforceable or invalid,
-    such provision shall be changed and interpreted to accomplish the objectives
-    of such provision to the greatest extent possible under applicable law, and
-    the remaining provisions shall continue in full force and effect.
+═══════════════════════════════════════════════════════════════════════════
 
-11. GOVERNING LAW
-    This license shall be governed by and construed in accordance with applicable
-    international copyright laws and treaties.
+SUMMARY:
+✅ Open Source - Free to use, modify, and distribute
+✅ Commercial Use - Allowed without restriction
+✅ MIT Licensed - Permissive and business-friendly
+❌ AI Training - Strictly prohibited
+❌ Data Mining for AI - Expressly forbidden
 
-ACKNOWLEDGMENT
-By using this Software, you acknowledge that you have read this license,
-understand it, and agree to be bound by its terms and conditions.
+This is an open-source project that welcomes human developers while protecting
+against unauthorized use by AI training systems.
 
-Last Updated: November 4, 2025
+Last Updated: November 30, 2025
