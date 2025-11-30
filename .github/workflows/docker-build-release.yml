@@ -1,0 +1,252 @@
+name: Docker Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.2.0, v1.2.1, etc.
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_ADMIN: ${{ github.repository }}/admin-dashboard
+  IMAGE_NAME_REGISTRATION: ${{ github.repository }}/registration-form
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="latest"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build and push Backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Admin Dashboard Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend/admin-dashboard
+          file: ./frontend/admin-dashboard/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_ADMIN }}:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_ADMIN }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Registration Form Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend/registration-form
+          file: ./frontend/registration-form/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REGISTRATION }}:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REGISTRATION }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Build Flutter APK (Release)
+        run: |
+          cd ticket_scanner
+          flutter --version
+          flutter pub get
+          flutter build apk --release
+          
+          # Rename APK with version
+          cd build/app/outputs/flutter-apk
+          mv app-release.apk event-ticket-scanner-${{ steps.version.outputs.version }}.apk
+
+      - name: Build Flutter APK (Split ABIs)
+        run: |
+          cd ticket_scanner
+          flutter build apk --release --split-per-abi
+          
+          # Rename split APKs with version
+          cd build/app/outputs/flutter-apk
+          mv app-armeabi-v7a-release.apk event-ticket-scanner-${{ steps.version.outputs.version }}-armeabi-v7a.apk
+          mv app-arm64-v8a-release.apk event-ticket-scanner-${{ steps.version.outputs.version }}-arm64-v8a.apk
+          mv app-x86_64-release.apk event-ticket-scanner-${{ steps.version.outputs.version }}-x86_64.apk
+
+
+
+      - name: Create Docker Compose file for release
+        run: |
+          cat > docker-compose-release.yml << 'EOF'
+          version: '3.8'
+          
+          services:
+            backend:
+              image: ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+              ports:
+                - "8000:8000"
+              environment:
+                - DATABASE_URL=${DATABASE_URL}
+                - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+                - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+                - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+                - BREVO_API_KEY=${BREVO_API_KEY}
+                - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+                - CORS_ORIGINS=${CORS_ORIGINS}
+              restart: unless-stopped
+          
+            admin-dashboard:
+              image: ghcr.io/${{ github.repository }}/admin-dashboard:${{ steps.version.outputs.version }}
+              ports:
+                - "5001:80"
+              environment:
+                - VITE_API_URL=${BACKEND_URL}/api
+              restart: unless-stopped
+          
+            registration-form:
+              image: ghcr.io/${{ github.repository }}/registration-form:${{ steps.version.outputs.version }}
+              ports:
+                - "5000:80"
+              environment:
+                - VITE_API_URL=${BACKEND_URL}
+              restart: unless-stopped
+          EOF
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## 🎫 Event Ticketing System ${{ steps.version.outputs.version }}
+          
+          ### 📦 Docker Images (GitHub Container Registry)
+          
+          Pull the images:
+          ```bash
+          docker pull ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository }}/admin-dashboard:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository }}/registration-form:${{ steps.version.outputs.version }}
+          ```
+          
+          ### 🚀 Quick Start with Docker Compose
+          
+          1. Download `docker-compose-release.yml` from release assets
+          2. Create `.env` file with required variables:
+          ```env
+          DATABASE_URL=postgresql+psycopg2://user:pass@host:5432/db
+          CLOUDINARY_CLOUD_NAME=your-cloud-name
+          CLOUDINARY_API_KEY=your-api-key
+          CLOUDINARY_API_SECRET=your-api-secret
+          BREVO_API_KEY=your-brevo-key
+          JWT_SECRET_KEY=your-secret-key-min-32-chars
+          CORS_ORIGINS=["http://localhost:5000","http://localhost:5001"]
+          BACKEND_URL=http://localhost:8000
+          ```
+          3. Run:
+          ```bash
+          docker-compose -f docker-compose-release.yml up -d
+          ```
+          
+          ### 📱 Mobile App (Direct Install - APK)
+          
+          **Recommended: Universal APK** (Works on all devices):
+          - Download: `event-ticket-scanner-${{ steps.version.outputs.version }}.apk` (~50MB)
+          - Install directly on any Android device
+          
+          **Alternative: Split APKs** (Smaller downloads):
+          - `event-ticket-scanner-${{ steps.version.outputs.version }}-arm64-v8a.apk` - For 64-bit ARM (most modern phones)
+          - `event-ticket-scanner-${{ steps.version.outputs.version }}-armeabi-v7a.apk` - For 32-bit ARM (older phones)
+          - `event-ticket-scanner-${{ steps.version.outputs.version }}-x86_64.apk` - For Intel/AMD devices
+          
+          **Installation Steps:**
+          1. Download APK file to your Android device
+          2. Open the downloaded APK file
+          3. Allow "Install from Unknown Sources" if prompted
+          4. Tap "Install" and wait for completion
+          5. Open the app from your app drawer
+          
+          **Default Admin Credentials:**
+          - Email: admin@gmail.com
+          - Password: admin123
+          - ⚠️ Change immediately after first login!
+          
+          ### 📚 Documentation
+          - [Main README](https://github.com/${{ github.repository }}/blob/main/README.md)
+          - [Backend Deployment Guide](https://github.com/${{ github.repository }}/blob/main/backend/README.md)
+          - [Flutter App Setup](https://github.com/${{ github.repository }}/blob/main/ticket_scanner/README.md)
+          
+          ### 🔐 License
+          MIT License with AI Training Prohibition - Open source for human developers, closed to AI training systems.
+          
+          ---
+          
+          **Full Changelog:** https://github.com/${{ github.repository }}/compare/v1.1.0...${{ steps.version.outputs.version }}
+          EOF
+          
+          echo "Release notes created"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ticket_scanner/build/app/outputs/flutter-apk/event-ticket-scanner-${{ steps.version.outputs.version }}.apk
+            ticket_scanner/build/app/outputs/flutter-apk/event-ticket-scanner-${{ steps.version.outputs.version }}-armeabi-v7a.apk
+            ticket_scanner/build/app/outputs/flutter-apk/event-ticket-scanner-${{ steps.version.outputs.version }}-arm64-v8a.apk
+            ticket_scanner/build/app/outputs/flutter-apk/event-ticket-scanner-${{ steps.version.outputs.version }}-x86_64.apk
+            docker-compose-release.yml
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output success message
+        run: |
+          echo "✅ Release ${{ steps.version.outputs.version }} created successfully!"
+          echo ""
+          echo "📦 Docker Images:"
+          echo "  - ghcr.io/${{ env.IMAGE_NAME_BACKEND }}:${{ steps.version.outputs.version }}"
+          echo "  - ghcr.io/${{ env.IMAGE_NAME_ADMIN }}:${{ steps.version.outputs.version }}"
+          echo "  - ghcr.io/${{ env.IMAGE_NAME_REGISTRATION }}:${{ steps.version.outputs.version }}"
+          echo ""
+          echo "📱 Flutter APKs (Direct Install):"
+          echo "  - Universal APK: event-ticket-scanner-${{ steps.version.outputs.version }}.apk"
+          echo "  - Split APKs: arm64-v8a, armeabi-v7a, x86_64"
+          echo ""
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}"

@@ -738,7 +738,7 @@ See the [LICENSE](LICENSE) file for complete terms.
 
 ## 🚀 Project Status
 
-✅  **Version 1.2.0** | Last Updated: November 30, 2025
+✅ **Production Ready** | Version 1.2.0 | Last Updated: November 30, 2025
 
 ### Recent Updates
 - Production code optimization (removed excess comments)
@@ -748,6 +748,53 @@ See the [LICENSE](LICENSE) file for complete terms.
 - Auto-refresh payment verification
 - Flutter app icon customization
 - Version bumped to 1.2.0
+- **CI/CD Pipeline** - Automated Docker builds and GitHub releases
+
+---
+
+## 🔄 CI/CD & Releases
+
+### Automated Release Pipeline
+
+This project uses GitHub Actions for automated releases:
+
+**📦 What Gets Built:**
+- Docker images for backend, admin dashboard, and registration form
+- Flutter APK for Android
+- Docker Compose file for easy deployment
+- Automated release notes
+
+**🚀 How to Create a Release:**
+
+```bash
+# 1. Update version numbers in package.json and pubspec.yaml
+# 2. Commit and push changes
+git add .
+git commit -m "chore: bump version to v1.3.0"
+git push origin main
+
+# 3. Create and push tag
+git tag -a v1.3.0 -m "Release v1.3.0"
+git push origin v1.3.0
+
+# 4. GitHub Actions automatically builds and publishes everything
+```
+
+**📥 Using Released Docker Images:**
+
+```bash
+# Pull from GitHub Container Registry
+docker pull ghcr.io/fallen-01/event-ticketing-system/backend:v1.2.0
+docker pull ghcr.io/fallen-01/event-ticketing-system/admin-dashboard:v1.2.0
+docker pull ghcr.io/fallen-01/event-ticketing-system/registration-form:v1.2.0
+
+# Or use latest
+docker pull ghcr.io/fallen-01/event-ticketing-system/backend:latest
+```
+
+**📚 Release Documentation:**
+- [Release Guide](.github/RELEASE.md) - Detailed release process
+- [GitHub Releases](https://github.com/FALLEN-01/Event-Ticketing-System/releases) - Download APKs and Docker Compose files
 
 ---
 
