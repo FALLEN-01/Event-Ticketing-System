@@ -35,11 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final storage = const FlutterSecureStorage();
   bool isLoading = false;
   // Get backend URL from environment or use default
-  // For production: https://event-ticketing-system-devx.onrender.com
   // For local development: http://10.0.2.2:8000 (Android emulator) or http://YOUR_IP:8000
   String apiBaseUrl = const String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'https://event-ticketing-system-devx.onrender.com',
+    defaultValue: 'your_backend_url_here',
   );
 
   @override

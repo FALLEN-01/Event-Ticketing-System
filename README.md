@@ -2,7 +2,6 @@
 
 **Complete event management platform** with registration, payment verification, QR ticketing, and mobile check-in scanner.
 
-![Status](https://img.shields.io/badge/status-production--ready-green)
 ![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT%20(No%20AI%20Training)-red)
 
@@ -739,7 +738,7 @@ See the [LICENSE](LICENSE) file for complete terms.
 
 ## 🚀 Project Status
 
-✅ **Production Ready** | Version 1.2.0 | Last Updated: November 30, 2025
+✅  **Version 1.2.0** | Last Updated: November 30, 2025
 
 ### Recent Updates
 - Production code optimization (removed excess comments)
