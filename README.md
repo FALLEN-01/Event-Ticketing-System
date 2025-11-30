@@ -758,7 +758,7 @@ See the [LICENSE](LICENSE) file for complete terms.
 
 This project uses GitHub Actions for automated releases:
 
-**📦 What Gets Built:**
+          **📦 What Gets Built:**
 - Docker images for backend, admin dashboard, and registration form
 - Flutter APK for Android
 - Docker Compose file for easy deployment
@@ -784,15 +784,13 @@ git push origin v1.3.0
 
 ```bash
 # Pull from GitHub Container Registry
-docker pull ghcr.io/fallen-01/event-ticketing-system/backend:v1.2.0
-docker pull ghcr.io/fallen-01/event-ticketing-system/admin-dashboard:v1.2.0
-docker pull ghcr.io/fallen-01/event-ticketing-system/registration-form:v1.2.0
+docker pull ghcr.io/fallen-01/event-ticketing-system-backend:v1.2.0
+docker pull ghcr.io/fallen-01/event-ticketing-system-admin:v1.2.0
+docker pull ghcr.io/fallen-01/event-ticketing-system-registration:v1.2.0
 
 # Or use latest
-docker pull ghcr.io/fallen-01/event-ticketing-system/backend:latest
-```
-
-**📚 Release Documentation:**
+docker pull ghcr.io/fallen-01/event-ticketing-system-backend:latest
+```**📚 Release Documentation:**
 - [Release Guide](.github/RELEASE.md) - Detailed release process
 - [GitHub Releases](https://github.com/FALLEN-01/Event-Ticketing-System/releases) - Download APKs and Docker Compose files
 

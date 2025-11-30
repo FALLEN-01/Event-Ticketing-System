@@ -8,9 +8,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
-  IMAGE_NAME_ADMIN: ${{ github.repository }}/admin-dashboard
-  IMAGE_NAME_REGISTRATION: ${{ github.repository }}/registration-form
+  IMAGE_NAME_BACKEND: ${{ github.repository_owner }}/event-ticketing-system-backend
+  IMAGE_NAME_ADMIN: ${{ github.repository_owner }}/event-ticketing-system-admin
+  IMAGE_NAME_REGISTRATION: ${{ github.repository_owner }}/event-ticketing-system-registration
 
 jobs:
   build-and-release:
@@ -118,7 +118,7 @@ jobs:
           
           services:
             backend:
-              image: ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+              image: ghcr.io/${{ github.repository_owner }}/event-ticketing-system-backend:${{ steps.version.outputs.version }}
               ports:
                 - "8000:8000"
               environment:
@@ -132,7 +132,7 @@ jobs:
               restart: unless-stopped
           
             admin-dashboard:
-              image: ghcr.io/${{ github.repository }}/admin-dashboard:${{ steps.version.outputs.version }}
+              image: ghcr.io/${{ github.repository_owner }}/event-ticketing-system-admin:${{ steps.version.outputs.version }}
               ports:
                 - "5001:80"
               environment:
@@ -140,7 +140,7 @@ jobs:
               restart: unless-stopped
           
             registration-form:
-              image: ghcr.io/${{ github.repository }}/registration-form:${{ steps.version.outputs.version }}
+              image: ghcr.io/${{ github.repository_owner }}/event-ticketing-system-registration:${{ steps.version.outputs.version }}
               ports:
                 - "5000:80"
               environment:
@@ -158,9 +158,9 @@ jobs:
           
           Pull the images:
           ```bash
-          docker pull ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
-          docker pull ghcr.io/${{ github.repository }}/admin-dashboard:${{ steps.version.outputs.version }}
-          docker pull ghcr.io/${{ github.repository }}/registration-form:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository_owner }}/event-ticketing-system-backend:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository_owner }}/event-ticketing-system-admin:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository_owner }}/event-ticketing-system-registration:${{ steps.version.outputs.version }}
           ```
           
           ### 🚀 Quick Start with Docker Compose
