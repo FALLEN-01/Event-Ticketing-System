@@ -18,6 +18,8 @@ build/
 # Environment
 .env
 .cert
+.crt
+capem.crt
 
 
 # IDEs
