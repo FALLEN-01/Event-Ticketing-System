@@ -52,6 +52,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     
+    '''
+    # Skip security headers for API docs (Swagger UI needs CDN access)
+    if request.url.path.startswith("/api/docs") or request.url.path.startswith("/api/redoc"):
+        return response
+    '''
+
     # Prevent clickjacking
     response.headers["X-Frame-Options"] = "DENY"
     
@@ -133,11 +139,10 @@ app.include_router(audit.router)  # Audit logs API
 @limiter.limit("10/minute")
 async def root(request: Request):
     return {
-        "message": "Event Ticket System API - Phase 2",
+        "message": "Event Ticket System API",
         "status": "active",
         "version": "2.1.0",
-        "phase": "2 - Full Registration with Payment & Ticket Generation",
-        "storage": "Cloudinary"
+        "Protocol": "Omega class"
     }
 
 
@@ -192,7 +197,7 @@ async def test_upload(request: Request, file: UploadFile = File(...)):
 async def health_check(request: Request):
     return {
         "status": "healthy",
-        "phase": "2"
+        "System":"Ready"
     }
 
 
