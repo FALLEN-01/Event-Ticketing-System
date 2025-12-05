@@ -185,7 +185,7 @@ async def register(
                     ticket_id=ticket.id,
                     checked_in=False
                 )
-                    db.add(attendance)
+                db.add(attendance)
         
         db.commit()
         db.refresh(new_registration)
